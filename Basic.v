@@ -144,6 +144,7 @@ Eval compute in plus ( S O ) ( S ( S O ) ).
 Example plus_test : ( plus 3 4 ) = 7.
 Proof. simpl. reflexivity. Qed.
 
+(*
 Example plus_comm : forall m n p : nat, plus m ( plus n p ) = plus ( plus m n ) p.
 Proof.
 intros m n p.
@@ -151,6 +152,7 @@ destruct m as [ | ].
 reflexivity.
 simpl.
 Admitted.
+*) 
 
 Fixpoint mult ( m n : nat ) : nat :=
   match m with
@@ -268,8 +270,10 @@ Proof. intros n m o. intros H. rewrite -> H. reflexivity. Qed.
 Theorem mult_O_plus : forall m n : nat, ( O + n ) * m = n * m.
 Proof. intros m n. rewrite -> plus_O_n. reflexivity. Qed.
 
+(*
 Theorem mult_comm : forall m n : nat, m * n = n * m.
 Proof. Admitted.
+*)
 
 Theorem mult_S_1 : forall m n : nat, m = S n -> m * ( 1 + n ) = m * m.
 Proof. intros m n. intros H. rewrite -> H. reflexivity. Qed.
