@@ -196,3 +196,8 @@ Eval simpl in tprogDenote ( tcompile ( TBConst true ) nil ) tt.
 Theorem tcompile_correct : forall t ( e : texp t ), 
    tprogDenote ( tcompile e nil ) tt = ( texpDenote e, tt).
 
+Check ( fun x : nat =>  x ).
+
+Check ( fun x : True => x ).
+
+Check ( fun x : False => x ).
