@@ -271,8 +271,10 @@ Theorem mult_O_plus : forall m n : nat, ( O + n ) * m = n * m.
 Proof. intros m n. rewrite -> plus_O_n. reflexivity. Qed.
 
 (*
+
 Theorem mult_comm : forall m n : nat, m * n = n * m.
 Proof. Admitted.
+
 *)
 
 Theorem mult_S_1 : forall m n : nat, m = S n -> m * ( 1 + n ) = m * m.
