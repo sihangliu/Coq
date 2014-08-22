@@ -122,6 +122,7 @@ discriminate.
 rewrite <- H.
 *)
 
+Module Playground1.
 Inductive nat : Type :=
  | O : nat
  | S : nat -> nat.
