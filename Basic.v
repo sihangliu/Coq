@@ -49,6 +49,7 @@ Definition orb ( x : bool ) ( y : bool ) : bool :=
   | true => true
   end.
 
+
 Example test_orb1 : ( orb true false ) = true.
 Proof. simpl. reflexivity. Qed.
 
@@ -89,8 +90,37 @@ Check true.
 Check ( negb false ).
 Check andb3.
 
+Definition xorb ( x : bool ) ( y : bool ) : bool :=
+  match x, y with
+  | true, true => false
+  | false, false => false
+  | _, _  => true
+  end.
 
-Module Playground1.
+Theorem xorb_equal : forall a : bool, xorb a a = false.
+Proof.
+intros a. destruct a as [ | ].
+reflexivity. reflexivity.
+Qed.
+
+
+Theorem xorb_equalleft : forall a b : bool, xorb a b = false -> a = b.
+Proof.
+intros a b H. destruct a. destruct b.
+reflexivity.
+discriminate.
+destruct b. discriminate.
+reflexivity.
+Qed.
+
+(*
+Theorem xorb_notequal : forall a b : bool, xorb a b = true -> a <> b.
+Proof.
+intros a b H.
+destruct a. destruct b.
+discriminate.
+rewrite <- H.
+*)
 
 Inductive nat : Type :=
  | O : nat
