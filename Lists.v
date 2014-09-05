@@ -457,6 +457,27 @@ Proof.
 Qed.
 
 (*
+Theorem snoc_theorem : forall ( n : nat ) ( l : natlist ),
+      snoc l n  = l ++ [ n ].
+Proof.
+  intros n l. induction l as [ | n' l'].
+  Case "l = nil".
+    simpl. reflexivity.
+  Case "l = cons n' l'".
+    simpl. rewrite -> IHl'. reflexivity.
+Qed.
+*)
+
+Theorem snoc_rev : forall ( n : nat ) ( l : natlist ),
+    rev ( snoc l n ) = n :: rev l.
+Proof.
+  intros n l. induction l as [ | n' l'].
+  Case "l = nil". 
+    simpl. reflexivity.
+  Case "l = cons n' l'".
+    simpl. rewrite -> IHl'. simpl. reflexivity.
+Qed.
+
 Theorem rev_involutive : forall l : natlist,
   rev (rev l) = l.
 Proof.
@@ -464,8 +485,9 @@ Proof.
  Case "l = nil".
    simpl. reflexivity.
  Case "l = cons n l'".
-   
-*)
+  simpl. rewrite -> snoc_rev. rewrite -> IHl'.
+  reflexivity.
+Qed.
 
 Theorem app_assoc4 : forall l1 l2 l3 l4 : natlist,
   l1 ++ (l2 ++ (l3 ++ l4)) = ((l1 ++ l2) ++ l3) ++ l4.
@@ -487,14 +509,18 @@ Proof.
   simpl. rewrite <- IHl'. reflexivity.
 Qed.
 
-(*
+
 Theorem distr_rev : forall l1 l2 : natlist,
   rev (l1 ++ l2) = (rev l2) ++ (rev l1).
 Proof.
  intros l1 l2. induction l1 as [ | n l1' ].
  Case "l1 = nil".
-  simpl. rewrite 
-*)
+  simpl. rewrite -> app_nil_end. reflexivity.
+ Case "l1 = cons n l1'".
+  simpl. rewrite -> IHl1'. rewrite -> snoc_append. 
+  rewrite -> app_assoc. rewrite -> snoc_append.
+  reflexivity.
+Qed.
 
 Lemma nonzeros_app : forall l1 l2 : natlist,
   nonzeros (l1 ++ l2) = (nonzeros l1) ++ (nonzeros l2).
@@ -578,15 +604,128 @@ Proof.
  Case "s = nil".
   simpl. reflexivity.
  Case "s = cons n' s'".
-   induction n as 
-*)
+  *) 
 
-Theorem rev_injective : forall (l1 l2 : natlist), rev l1 = rev l2 -> l1 = l2. 
+
+
+Theorem rev_injective : forall (l1 l2 : natlist) , 
+   rev l1 = rev l2 -> l1 = l2. 
 Proof.
- intros l1 l2 H. induction l1 as [ | n l1'].
- Case "l1 = nil".
-  simpl. induction l2 as [ | m l2'].
-  SCase "l2 = nil".
-   simpl. reflexivity.
-  SCase "l2 =  cons m l2'".
-   
+ intros l1 l2 H.  rewrite <- rev_involutive. rewrite <- H. 
+ rewrite -> rev_involutive. reflexivity.
+Qed.
+
+Fixpoint index_bad ( n : nat ) ( l : natlist ) : nat :=
+ match l with
+ | nil => 42
+ | h :: tl => match beq_nat n O with
+              | true => h 
+              | false => index_bad ( pred n ) tl
+              end
+ end.
+
+Inductive natoption : Type := 
+ | None : natoption
+ | Some : nat -> natoption.
+
+Fixpoint index ( n : nat ) ( l : natlist ) : natoption :=
+ match l with
+ | nil => None
+ | h :: tl => match n with 
+              | O => Some h
+              | S n' => index n' tl
+              end
+ end.
+
+Example test_index1 : index 0 [4;5;6;7] = Some 4.
+Proof. reflexivity. Qed.
+Example test_index2 : index 3 [4;5;6;7] = Some 7.
+Proof. reflexivity. Qed.
+Example test_index3 : index 10 [4;5;6;7] = None.
+Proof. reflexivity. Qed.
+
+Fixpoint index' ( n : nat ) ( l : natlist ) : natoption :=
+ match l with
+ | nil => None
+ | h :: tl => if beq_nat n O then Some h else index' ( pred n ) tl
+ end.
+
+Definition option_elim ( d : nat ) ( o : natoption ) : nat :=
+ match o with
+ | None => d
+ | Some a => a 
+ end.
+
+Definition hd_opt ( l : natlist ) : natoption :=
+ match l with
+ | nil => None
+ | h :: tl => Some h
+ end.
+
+Example test_hd_opt1 : hd_opt [] = None.
+Proof.
+ reflexivity.
+Qed.
+
+Example test_hd_opt2 : hd_opt [1] = Some 1.
+Proof.
+ reflexivity.
+Qed.
+
+Example test_hd_opt3 : hd_opt [5;6] = Some 5.
+Proof.
+ reflexivity.
+Qed.
+
+Theorem option_elim_hd : forall (l:natlist) (default:nat),
+  hd default l = option_elim default (hd_opt l).
+Proof.
+ intros. induction l as [ | h' l'].
+ Case "l = nil".
+  simpl. reflexivity.
+ Case "l = cons h' l'".
+  simpl. reflexivity.
+Qed.
+
+Module Dictionary.
+
+Inductive dictionary : Type :=
+ | empty : dictionary
+ | record : nat -> nat -> dictionary -> dictionary.
+
+Definition insert ( key value : nat ) ( d : dictionary ) : dictionary :=
+  record key value d.
+
+Fixpoint find ( key : nat ) ( d : dictionary ) : natoption :=
+ match d with
+ | empty => None
+ | record key' value' d' => if beq_nat key key' then Some value'
+                            else find key  d'
+ end.
+
+Theorem bequal : forall n : nat, beq_nat n n = true.
+Proof.
+ intros. induction n as [ | n'].
+ Case "n = O".
+  reflexivity.
+ Case "n = S n'".
+  simpl. rewrite -> IHn'. reflexivity.
+Qed.
+
+Theorem dictionary_invariant1' : forall (d : dictionary) (k v: nat),
+  (find k (insert k v d)) = Some v.
+Proof.
+ intros d k v. simpl.
+ rewrite -> bequal. reflexivity.
+Qed.
+
+
+Theorem dictionary_invariant2' : forall (d : dictionary) (m n o: nat),
+  beq_nat m n = false -> find m d = find m (insert n o d).
+Proof.
+ intros d m n o H. simpl. rewrite -> H. reflexivity.
+Qed.
+
+End Dictionary.
+
+End NatList.
