@@ -703,20 +703,12 @@ Fixpoint find ( key : nat ) ( d : dictionary ) : natoption :=
                             else find key  d'
  end.
 
-Theorem bequal : forall n : nat, beq_nat n n = true.
-Proof.
- intros. induction n as [ | n'].
- Case "n = O".
-  reflexivity.
- Case "n = S n'".
-  simpl. rewrite -> IHn'. reflexivity.
-Qed.
 
 Theorem dictionary_invariant1' : forall (d : dictionary) (k v: nat),
   (find k (insert k v d)) = Some v.
 Proof.
  intros d k v. simpl.
- rewrite -> bequal. reflexivity.
+ rewrite -> beq_equal. reflexivity.
 Qed.
 
 
