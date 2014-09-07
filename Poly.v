@@ -535,6 +535,18 @@ Proof.
  compute. reflexivity.
 Qed.
 
+
+Theorem map_snoc : forall (X Y : Type) (f : X -> Y) ( h : X ) ( l : list X ),
+  map f ( snoc l h ) = snoc ( map f l ) ( f h ).
+Proof.
+ intros X Y f h l. induction l as [ | h' l' ].
+ Case "l = nil".
+  simpl. reflexivity.
+ Case "l = cons h' l'".
+  simpl. rewrite -> IHl'. reflexivity.
+Qed.
+
+
 Theorem map_rev : forall (X Y : Type) (f : X -> Y) (l : list X),
   map f (rev l) = rev (map f l).
 Proof.
@@ -542,4 +554,21 @@ Proof.
  Case "l = nil".
   simpl. reflexivity.
  Case "l = cons h' l'".
-  simpl
+  simpl. rewrite <- IHl'. rewrite -> map_snoc. reflexivity.
+Qed.
+
+Definition compose { X Y Z : Type } 
+   ( f :  Y ->  Z ) ( g : X -> Y ) ( x : X ) := 
+   f ( g x ).
+
+Theorem map_compose : forall ( X Y Z : Type )
+     ( f :  Y ->  Z ) ( g : X ->  Y ) ( l : list X ),
+     compose ( map f ) ( map g )  l = map ( compose f g ) l.  
+Proof.
+  intros X Y Z f g l. induction l as [ | h' l'].
+  Case "l = nil".
+   compute. reflexivity.
+  Case "l = cons h' l'".
+   simpl. rewrite <- IHl'. reflexivity.
+Qed.
+
