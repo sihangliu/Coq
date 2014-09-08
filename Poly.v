@@ -752,3 +752,21 @@ Proof.
   reflexivity.
 Qed.
 
+Definition  fold_map { X Y : Type } ( f : X -> Y ) ( l : list X ) : list Y := 
+  fold ( fun x y => f x :: y ) l [].
+
+Example test_map1': map (plus 3) [2;0;2] = fold_map ( plus 3 ) [2;0;2].
+Proof.
+compute. reflexivity.
+Qed.
+
+Example map_foldmap_equal : forall ( X Y : Type ) ( f : X -> Y ) ( l : list X ) ,
+  map f l = fold_map f l.
+Proof.
+ intros X Y f l. induction l as [ | h' l' ].
+ Case "l = nil".
+  simpl.  reflexivity.
+ Case "l = cons h' l'".
+  simpl. unfold fold_map. simpl. rewrite -> IHl'. reflexivity.
+Qed.
+
