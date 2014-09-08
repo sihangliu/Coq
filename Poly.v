@@ -572,3 +572,183 @@ Proof.
    simpl. rewrite <- IHl'. reflexivity.
 Qed.
 
+Fixpoint flat_map { X Y : Type } ( f : X -> list Y ) ( l : list X ) : list Y :=
+ match l with
+ | nil => nil
+ | h :: t => f h ++ flat_map f t
+ end.
+
+Example test_flat_map1:
+  flat_map (fun n => [n;n;n]) [1;5;4]
+  = [1; 1; 1; 5; 5; 5; 4; 4; 4].
+Proof.
+ simpl. reflexivity.
+Qed.
+
+Definition option_map { X Y : Type } ( f : X -> Y ) ( xo : option X ) : option Y :=
+ match xo with
+ | None => None
+ | Some x => Some ( f x )
+ end.
+
+Fixpoint filter' ( X : Type ) ( f : X -> bool ) ( l : list X ) : list X :=
+ match l with
+ | nil => nil
+ | h :: t => if f h then h :: filter' X f t else filter' X f t
+ end.
+
+Example test_filter2'' : 
+  filter' ( list nat ) ( fun l => beq_nat ( length l ) 1 ) [ [1; 2]; [3]; [4]; [5;6;7]; []; [8] ]
+ = [ [3]; [4]; [8] ].
+Proof.
+ compute. reflexivity.
+Qed.
+
+Fixpoint map' ( X Y : Type ) ( f : X -> Y ) ( l : list X ) : list Y :=
+ match l with
+ | nil => nil
+ | h :: t => f h :: map' X Y f t
+ end.
+
+Example test_map3':
+    map' nat ( list bool ) (fun n => [evenb n;oddb n]) [2;1;2;5]
+  = [[true;false];[false;true];[true;false];[false;true]].
+Proof.
+ compute. reflexivity.
+Qed.
+
+Fixpoint fold { X Y : Type } ( f : X -> Y -> Y ) ( l : list X ) ( b : Y ) : Y :=
+ match l with
+ | nil => b
+ | h :: t => f h ( fold f t b )
+ end.
+
+Eval compute in fold plus [ 1 ; 2 ; 3 ; 4 ] 0.
+
+Check fold andb.
+
+Example fold_example1 : fold mult [1;2;3;4] 1 = 24.
+Proof.
+ simpl. reflexivity.
+Qed.
+
+Example fold_example2 : fold andb [true;true;false;true] true = false.
+Proof.
+ simpl. reflexivity.
+Qed.
+
+Example fold_example3 : fold app [[1];[];[2;3];[4]] [] = [1;2;3;4].
+Proof.
+ simpl. reflexivity.
+Qed.
+
+Definition constfun { X : Type } ( x : X ) : nat -> X :=
+ fun ( k : nat ) => x.
+
+Definition ftrue := constfun true.
+
+Example constfun_example1 : ftrue 0 = true.
+Proof. 
+ simpl. compute. reflexivity.
+Qed.
+
+Example constfun_example2 : (constfun 5)  99 = 5.
+Proof. 
+ simpl. compute. reflexivity.
+Qed.
+
+Definition override { X : Type } ( f : nat -> X ) ( k : nat ) ( x : X ) : nat -> X :=
+ fun ( k' : nat ) => if beq_nat k k' then x else f k'.
+
+Definition fmostlytrue := override (override ftrue 1 false) 3 false.
+
+Example override_example1 : fmostlytrue 0 = true.
+Proof. 
+  simpl. compute. reflexivity. 
+Qed.
+
+Example override_example2 : fmostlytrue 1 = false.
+Proof.
+  compute. reflexivity. 
+Qed.
+
+Example override_example3 : fmostlytrue 2 = true.
+Proof.
+ compute. reflexivity. 
+Qed.
+
+Example override_example4 : fmostlytrue 3 = false.
+Proof. 
+ compute. reflexivity. 
+Qed.
+
+Theorem override_example : forall (b:bool),
+  (override (constfun b) 3 true) 2 = b.
+Proof.
+ intros b. compute. reflexivity.
+Qed.
+
+
+Theorem unfold_example_bad : forall m n,
+  3 + n = m -> plus3 n + 1 = m + 1.
+Proof.
+ intros m n H. simpl. rewrite <- H. simpl. reflexivity.
+Qed.
+
+Theorem unfold_example_bad' : forall m n,
+  3 + n = m ->
+  plus3 n + 1 = m + 1.
+Proof.
+ intros n m H. 
+ Abort.
+
+Theorem unfold_example : forall m n,
+  3 + n = m ->
+  plus3 n + 1 = m + 1.
+Proof.
+ intros m n H.
+ unfold plus3.
+ rewrite <- H. 
+ reflexivity.
+Qed.
+
+Require Export Induction.
+Theorem override_eq : forall { X:Type } x k (f:nat -> X),
+  (override f k x) k = x.
+Proof.
+ intros X x k f.
+ unfold override. rewrite <- beq_nat_refl.
+ reflexivity.
+Qed.
+
+Theorem override_neq : forall (X:Type) x1 x2 k1 k2 (f : nat -> X),
+  f k1 = x1 ->
+  beq_nat k2 k1 = false ->
+  (override f k2 x2) k1 = x1.
+Proof.
+ intros X x1 x2 k1 k2 f H1 H2.
+ unfold override. rewrite -> H2. rewrite -> H1.
+ reflexivity.
+Qed.
+
+Definition fold_length { X : Type } ( l : list X ) : nat :=
+  fold ( fun _ n => S n ) l 0.
+
+Example test_fold_length1 : fold_length [4;7;0] = 3.
+Proof. 
+ unfold fold_length. simpl. 
+ reflexivity. 
+Qed.
+
+Theorem fold_length_correct : forall X (l : list X),
+  fold_length l = length l.
+Proof.
+ intros X l. induction l as [ | h' l'].
+ Case "l = nil".
+  reflexivity.
+ Case "l = cons h' l'".
+  simpl. unfold fold_length. simpl.
+  rewrite <- IHl'. unfold fold_length.
+  reflexivity.
+Qed.
+
