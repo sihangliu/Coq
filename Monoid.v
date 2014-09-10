@@ -1,4 +1,3 @@
-Module Monoid.
 Require Import List.
 
 Theorem Closure : forall ( X : Type ) ( l1 l2 : list X ) , exists ( l3 : list X ),
