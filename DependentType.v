@@ -22,3 +22,12 @@ Fixpoint beq_nat ( m n : nat ) : typefun 0 :=
   end.
 
 Eval compute in add ( fun n => n + 1 ) ( fun n => if beq_nat n O then true else false) 1.
+
+Fixpoint typesum ( n : nat ) : Type :=
+  match n with 
+  | O => nat
+  | S n' =>  nat -> typesum n'
+  end.
+
+Eval compute in typesum 10.
+
