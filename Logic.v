@@ -308,9 +308,10 @@ Qed.
 Theorem contrapositive : forall P Q : Prop,
   (P -> Q) -> (~Q -> ~P).
 Proof.
- intros P Q H1 H2. unfold not in H2. apply H2 in H1. unfold not.
- inversion H1.
-Abort.
+ intros P Q H1 H2. unfold not in H2. unfold not.
+ intros Hp. apply H1 in Hp. apply H2 in Hp.
+ inversion Hp.
+Qed.
 
 Theorem not_both_true_and_false : forall P : Prop,
   ~ (P /\ ~P).
@@ -349,20 +350,44 @@ Theorem false_beq_nat : forall n m : nat,
      n <> m ->
      beq_nat n m = false.
 Proof.
- intros n m H. generalize dependent m.
- induction n as [ | n' ].
- Case "n = O".
-  intros m H. apply ex_falso_quodlibet. 
-Abort.
+ intros n m H. unfold not in H.
+ Abort.
 
 SearchAbout beq_nat.
 Theorem beq_nat_false : forall n m,
   beq_nat n m = false -> n <> m.
 Proof.
- intros n m H. generalize dependent m.
- induction n as [ | n' ].
- Case "n = O".
-  destruct m. simpl. intros H. inversion H.
-  simpl. intros H. apply ex_falso_quodlibet.
+  intros n m H. unfold not.
+Abort.  
+
+(* proofs from type theory and functional programming *)
+Theorem implication_trans : forall A B C : Prop,
+  ( A -> B ) -> ( B -> C ) -> ( A -> C).
+Proof.
+  intros A B C H1 H2 H3. apply H1 in H3. apply H2 in H3. apply H3.
+Qed.
+
+Theorem prob_second : forall  A B C : Prop , 
+    ( ( A \/ B ) -> C ) -> ( ( A -> C ) /\ ( B -> C ) ).
+Proof.
+  intros A B C H. 
 Abort.
 
+Theorem prob_thrid : forall A B C : Prop , 
+  ( A -> ( B -> C ) ) -> ( ( A /\ B ) -> C ).
+Proof.
+  intros A B C H1 H2. inversion H2. apply H1 in H. apply H. apply H0.
+Qed.
+
+Theorem prob_four : forall A B : Prop , 
+  ( A -> B ) -> ( B -> A ).
+Proof.
+  intros A B H1 H2.
+Abort.
+
+Theorem prob_five : forall A B : Prop,
+  A -> ~ ~ A.
+Proof.
+  intros A B H. unfold not. intros Hf. apply Hf in H.
+  inversion H.
+Qed.
