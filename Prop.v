@@ -116,3 +116,150 @@ Proof.
 Qed.
 
 
+Theorem gorgeous__beautiful : forall n,
+  gorgeous n -> beautiful n.
+Proof.
+ intros n H. induction H as [ a | b | c ].
+ Case "g_0". apply b_O.
+ Case "g_plus3". apply b_sum with ( n := 3 ) ( m := b ).
+         apply b_3. apply IHgorgeous.
+ Case "g_plus5". apply b_sum with ( n := 5 ) ( m := c ).
+         apply b_5. apply IHgorgeous.
+Qed.
+
+Theorem gorgeous__beautiful_FAILED : forall n,
+  gorgeous n -> beautiful n.
+Proof.
+ intros n H. induction n as [ | n'].
+ Case "n = O".
+  apply b_O.
+ Case "n = S n'".
+Abort.
+
+Theorem gorgeous_sum : forall n m,
+  gorgeous n -> gorgeous m -> gorgeous (n + m).
+Proof.
+ intros n m E1 E2. induction E1 as [ | b | c ].
+ Case "g_0".
+    simpl. apply E2.
+ Case "g_plus3".
+    apply g_plus3 with ( n := b + m ). apply IHE1.
+ Case "g_plus5".
+     apply g_plus5 with ( n := c + m ). apply IHE1.
+Qed.
+
+Theorem beautiful__gorgeous : forall n, beautiful n -> gorgeous n.
+Proof.
+ intros n E. induction E as [ a | b | c | d ].
+ Case "a = b_O". apply g_0.
+ Case "b = b_3". apply g_plus3. apply g_0.
+ Case "c = b_5". apply g_plus5. apply g_0.
+ Case "d = b_sum". apply gorgeous_sum with ( n := d ) ( m := m ).
+     SCase "n = d". apply IHE1.
+     SCase "m = m". apply IHE2.
+Qed.
+
+Lemma helper_g_times2 : forall x y z, x + (z + y)= z + x + y.
+Proof.
+  intros x y z. induction x. 
+  Case "x = O".
+    simpl. rewrite -> plus_0_r_firsttry. reflexivity.
+  Case "x = S x'".
+   assert ( H : z + S x = S x + z ).
+       apply plus_comm. 
+   rewrite -> H. simpl. rewrite -> plus_assoc. reflexivity.
+Qed.
+
+Theorem g_times2: forall n, gorgeous n -> gorgeous (2*n).
+Proof.
+   intros n E. simpl. induction E as [ | b | c ].
+   Case "g_0". simpl. apply g_0.
+   Case "g_plus3".
+       rewrite -> plus_0_r_firsttry. rewrite plus_0_r_firsttry in IHE.
+       apply g_plus3 with ( n := b + ( 3 + b ) ). rewrite -> plus_comm.
+       apply g_plus3 with ( n := b + b ). apply IHE.
+   Case "g_plus5".
+       rewrite plus_0_r_firsttry. rewrite plus_0_r_firsttry in IHE.
+       apply g_plus5 with ( n := c + ( 5 + c ) ). rewrite -> plus_comm.
+       apply g_plus5 with ( n := c + c ). apply IHE.
+Qed.
+
+Theorem ev_minus2: forall n,
+  ev n -> ev (pred (pred n)).
+Proof.
+  intros n E. induction E.
+  Case "E = ev_O".
+   simpl. apply ev_O.
+  Case "E = ev_SS".
+   simpl. apply E.
+Qed.
+
+Theorem ev_minus2': forall n,
+  ev n -> ev (pred (pred n)).
+Proof.
+ intros n E. inversion E as [ | n' E'].
+ Case "E = ev_O".
+   simpl. rewrite H. apply E.
+ Case "E = ev_SS".
+   simpl. apply E'.
+Qed.
+
+Theorem SSev__even : forall n,
+  ev (S (S n)) -> ev n.
+Proof.
+ intros n E. inversion E as [ | n' E' ].
+ apply E'.
+Qed.
+
+Theorem SSSSev__even : forall n,
+  ev (S (S (S (S n)))) -> ev n.
+Proof.
+ intros n E. inversion E as [ | n' E'].
+ apply SSev__even in E'. apply E'.
+Qed.
+
+Theorem even5_nonsense :
+  ev 5 -> 2 + 2 = 9.
+Proof. 
+ intros H. inversion H. inversion H1. inversion H3.
+Qed.
+
+Theorem ev_ev__ev : forall n m,
+  ev (n+m) -> ev n -> ev m.
+Proof.
+ intros n m E1 E2. generalize dependent E1. induction  E2.
+ Case "ev_O".  simpl.  intros E. apply E.
+ Case "ev_SS".
+     simpl. intros H. apply IHE2. inversion H. apply H1.
+Qed.
+
+Theorem ev_plus_plus : forall n m p,
+  ev (n+m) -> ev (n+p) -> ev (m+p).
+Proof.
+ intros n m p E1 E2. 
+Abort.
+
+Inductive pal { X : Type } : list X -> Prop :=
+ | emptyC : pal nil
+ | oneC : forall ( a : X ) , pal ( a :: nil )
+ | consC : forall ( a : X ) ( l : list X ) , pal l -> pal ( a :: l ++ [a]).
+
+
+
+
+Theorem reverseonlist : forall { X : Type } ( l : list X ), pal ( l ++ rev l). 
+Proof.
+ intros X l. induction l as [ | v' l'].
+ Case "l = nil".
+   simpl. apply emptyC.
+ Case "l = Cons v' l'".
+   simpl. rewrite -> snoc_list. rewrite <- list_assoc.
+   apply consC with ( a := v' ) ( l := l' ++ rev l' ).
+   apply IHl'.
+Qed.
+
+
+Theorem revpal : forall ( X : Type ) ( l : list X ) , 
+  l = rev l -> pal l.
+Proof.
+ intros X l H. 
