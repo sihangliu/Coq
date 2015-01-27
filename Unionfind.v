@@ -1,21 +1,17 @@
-Require Export FMapAVL.
+Require Export FSets.FMapAVL.
 Require Export Coq.Structures.OrderedTypeEx.
+Require Export Coq.Arith.EqNat.
 
-Module M := FMapAVL.Make(Nat_as_OT).
+Module M := FSets.FMapAVL.Make  Nat_as_OT.
 
-Definition map_nat_nat: Type := M.t nat.
+Definition uniondatastruct  : Type := M.t  ( nat * nat ).
+Definition myempty := @M.empty ( nat * nat ).
+Check @M.empty ( nat * nat ).
 
-Definition find k (m: map_nat_nat) := M.find k m.
+Check M.add 1 ( 1, 1 ) ( M.add 2 ( 2, 1) ( M.add 3 ( 3, 1 ) myempty ) ).
 
-Definition update (p: nat * nat) (m: map_nat_nat) :=
-  M.add (fst p) (snd p) m.
-
-Notation "k |-> v" := (pair k v) (at level 60).
-Notation "[ ]" := (M.empty nat).
-Notation "[ p1 , .. , pn ]" := (update p1 .. (update pn (M.empty nat)) .. ).
-
-Example ex1: find 3 [1 |-> 2, 3 |-> 4] = Some 4.
-Proof. reflexivity. Qed.
-
-Example ex2: find 5 [1 |-> 2, 3 |-> 4] = None.
-Proof. reflexivity. Qed.
+Fixpoint find ( k : nat ) ( m : uniondatastruct ) : option nat :=
+  match M.find k m with
+  | None  => None
+  | Some ( a, _ ) => if beq_nat a k then Some a else find a m
+  end.
