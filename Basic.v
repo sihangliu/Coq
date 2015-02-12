@@ -107,10 +107,8 @@ Qed.
 Theorem xorb_equalleft : forall a b : bool, xorb a b = false -> a = b.
 Proof.
 intros a b H. destruct a. destruct b.
-reflexivity.
-discriminate.
-destruct b. discriminate.
-reflexivity.
+reflexivity. discriminate.
+destruct b. discriminate. reflexivity.
 Qed.
 
 (*

@@ -432,15 +432,28 @@ SearchAbout ( _ <= _ ).
 Theorem le_plus_l : forall a b,
                       a <= a + b.
 Proof.
-  intros a. induction a. simpl.
-Abort.
+  intros a b. generalize dependent  a.
+  induction b.   
+  Case "b = O".  intros a. SearchAbout ( _ + 0 = _ ).
+   rewrite -> plus_0_r_firsttry. apply le_n.
+  Case "b = S b'". intros a. inversion a.
+  SearchAbout ( _ + S _ ). rewrite <- Induction.plus_n_Sm.
+  apply le_S. apply IHb. rewrite <- Induction.plus_n_Sm.
+  apply le_S. apply IHb.
+Qed.
 
 Theorem plus_lt : forall n1 n2 m,
                     n1 + n2 < m -> n1 < m /\ n2 < m.
 Proof.
-  unfold lt. intros n1 n2 m H.
-  inversion H. split. apply le_S.
-Abort.
+  unfold lt. intros n1 n2 m H. generalize dependent n1.
+  generalize dependent n2.
+  induction m.
+  Case "m = O".
+  intros n1 n2 H. inversion H.
+  Case "m = S m'".
+  intros n1 n2 H. apply le_S.
+
+
 
 Theorem lt_S : forall n m,
                  n < m -> n < S m.

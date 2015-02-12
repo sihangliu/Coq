@@ -88,20 +88,6 @@ Case "n = S n'".
    simpl. rewrite -> IHn'. reflexivity.
 Qed.
 
-(*
-Theorem minus_diag : forall n, minus n n = 0.
-Proof.
-intros n. destruct n as [ O | n' ].
-Case "n = O". 
-    reflexivity.
-Case "n = S n'".
-    simpl. destruct n' as [ O | n'' ].
-    SCase "n' = O".
-         reflexivity.
-    SCase "n' = S n''".
-         simpl.
-You get the idea. You keep doing this so go for induction or probably Ltac".
-*)
 
 
 Theorem minus_diag : forall n, minus n n = 0 .
@@ -359,10 +345,3 @@ Case "n = O".
 Case "n = S n'".
   simpl. rewrite <- IHn'. reflexivity.
 Qed.
-
-(*
-Require Import  Coq.Numbers.Natural.Peano.NPeano.
-Open Scope nat_scope.
-Theorem inverseexistence : forall a  n : nat, gcd a n = 1 -> exists b : nat, 
-                      modulo  ( a * b ) n = 1 .
-*)

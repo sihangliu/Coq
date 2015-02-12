@@ -19,6 +19,7 @@ Print silly_implication.
 Inductive and ( P Q : Prop ) : Prop := 
   conj : P -> Q -> ( and P Q ).
 
+Print and_rect.
 Notation "P /\ Q " := ( and P Q ) : type_scope.
 Check conj.
 
@@ -35,7 +36,7 @@ Qed.
 Theorem and_example' : 
    ( 0 = 0 ) /\ ( 4 = mult 2 2 ).
 Proof.
-  split.
+  split. (* short hand for apply conj *)
   Case "left".
     reflexivity.
   Case "right".
@@ -73,7 +74,7 @@ Theorem and_assoc : forall ( P Q R : Prop ) ,
   P /\ ( Q /\ R ) -> ( P /\ Q ) /\ R .
 Proof.
  intros P Q R H.
- inversion H as [ HP [ HQ HR ] ].
+ inversion H as [ HP [HQ HR] ].
  split.
   Case "left". 
     split.
@@ -99,7 +100,7 @@ Qed.
 Theorem iff_sym : forall P Q : Prop, 
  ( P <-> Q ) -> ( Q <-> P ).
 Proof.
- intros P Q H. inversion H as [ HPQ HQP].
+ intros P Q H. inversion H as [ HPQ HQP].  
  split.
   Case "left". apply HQP.
   Case "right". apply HPQ.
@@ -117,10 +118,14 @@ Proof.
 Qed.
 
 Theorem iff_trans : forall P Q R : Prop,
-  ( P <-> Q ) -> ( Q <-> R ) -> ( P -> R ).
+  ( P <-> Q ) -> ( Q <-> R ) -> ( P <-> R ).
 Proof.
   intros P Q R HPQ HQR. inversion HPQ as [ HP HQ]. inversion HQR as [ HQ' HP'].
-  intros H. apply HP in H. apply HQ' in H. apply H.
+  split.
+  Case "left". intros H.
+    apply HP in H. apply HQ' in H. apply H.
+  Case "right". intros H.
+    apply HP' in H. apply HQ in H. apply H.
 Qed.
 
 Inductive or ( P Q : Prop ) : Prop := 
@@ -188,14 +193,12 @@ Qed.
 Theorem andb_prop : forall b c,
   andb b c = true -> b = true /\ c = true.
 Proof.
-  intros b c H.
+  intros b c H. unfold andb in H.
   destruct b.
-  Case "b = true". destruct c.
-    SCase "c = true". split. reflexivity. reflexivity.
-    SCase "c = false". split. reflexivity. inversion H.
-  Case "b = false". destruct c.
-    SCase "c = true". split. inversion H. reflexivity.
-    SCase "c = false". split. inversion H. inversion H.
+  Case "b = true". split.
+     SCase "left". reflexivity. 
+     SCase "right". apply H.
+  Case "b = false". inversion H.
 Qed.
 
 Theorem andb_true_intro : forall b c,
@@ -207,46 +210,36 @@ Qed.
 Theorem andb_false : forall b c,
   andb b c = false -> b = false \/ c = false.
 Proof.
-  intros b c H. destruct b.
-  Case "b = true". destruct c.
-   SCase "c = true". 
-      left. inversion H.
-   SCase "c = false".
-      right. reflexivity.
-  Case "b = false". destruct c.
-   SCase "c = true". 
-      left. reflexivity.
-   SCase "c = false".
-      left. reflexivity.
+  intros b c H. unfold andb in H.
+  destruct b.
+  Case "b = true".
+    right. apply H.
+  Case "b = false".
+    left. apply H.
 Qed.
 
 Theorem orb_prop : forall b c,
   orb b c = true -> b = true \/ c = true.
 Proof.
-  intros b c H.  
+  intros b c H. unfold orb in H.
   destruct b.
   Case "b = true".
     left. reflexivity.
-  Case "b = false". destruct c.
-    SCase "c = true".
-       right. reflexivity.
-    SCase "c = false".
-       inversion H.
+  Case "b = false".
+    right. apply H.  
 Qed.
 
 Theorem orb_false_elim : forall b c,
   orb b c = false -> b = false /\ c = false.
 Proof.
-  intros b c H.
+  intros b c H. unfold orb in H.
   destruct b.
-  Case "b = true". split.
-      SCase "left". inversion H.
-      SCase "right". inversion H.
-  Case "b = false". destruct c.
-      SCase "c = true". split. 
-        SSCase "left". reflexivity.
-        SSCase "right". inversion H.
-      SCase "c = false". split. reflexivity. reflexivity.
+  Case "b = true".
+    inversion H.
+  Case "b = false".
+  split.
+      SCase "left". reflexivity.
+      SCase "right". apply H.
 Qed.
 
 Inductive False : Prop := .
@@ -265,7 +258,7 @@ Conversely, the only way to prove False is if there is already something
 Theorem nonsense_implies_False :
   2 + 2 = 5 -> False.
 Proof.
- intros H. inversion H.
+ intros H. simpl in H. inversion H.
 Qed.
 
 (* 
@@ -298,12 +291,14 @@ Proof.
  unfold not in NHP. apply NHP in HP. inversion HP.
 Qed.
 
+
 Theorem double_neg : forall P : Prop,
   P -> ~~P.
 Proof.
  intros P H. unfold not. intros HN.
  apply HN in H. inversion H.
 Qed.
+
 
 Theorem contrapositive : forall P Q : Prop,
   (P -> Q) -> (~Q -> ~P).
@@ -350,15 +345,14 @@ Theorem false_beq_nat : forall n m : nat,
      n <> m ->
      beq_nat n m = false.
 Proof.
- intros n m H. unfold not in H.
- Abort.
+  Abort.
 
 SearchAbout beq_nat.
 Theorem beq_nat_false : forall n m,
   beq_nat n m = false -> n <> m.
 Proof.
-  intros n m H. unfold not.
-Abort.  
+ Abort.
+
 
 (* proofs from type theory and functional programming *)
 Theorem implication_trans : forall A B C : Prop,
@@ -370,8 +364,14 @@ Qed.
 Theorem prob_second : forall  A B C : Prop , 
     ( ( A \/ B ) -> C ) -> ( ( A -> C ) /\ ( B -> C ) ).
 Proof.
-  intros A B C H. 
-Abort.
+  intros A B C H. split.
+  Case "left".
+    intros H0. apply H.
+    left. apply H0.    
+  Case "right".
+     intros H0. apply H.     
+     right. apply H0.
+Qed.
 
 Theorem prob_thrid : forall A B C : Prop , 
   ( A -> ( B -> C ) ) -> ( ( A /\ B ) -> C ).
@@ -383,7 +383,15 @@ Theorem prob_four : forall A B : Prop ,
   ( A -> B ) -> ( B -> A ).
 Proof.
   intros A B H1 H2.
-Abort.
+(* probably not provable in Coq.
+A : Prop
+  B : Prop
+  H1 : A -> B
+  H2 : B
+  ============================
+   A
+ *)
+ Abort.
 
 Theorem prob_five : forall A B : Prop,
   A -> ~ ~ A.
