@@ -565,5 +565,8 @@ Module NatList.
     Proof.
       intros d m n o H. simpl. rewrite H. reflexivity.
     Qed.
+  End Dictionary.
+End NatList.
+
 
     
