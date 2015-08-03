@@ -195,24 +195,30 @@ Notation "x × y" := (mult x y)
 
 Check ((0 + 1) + 1).
 
-Fixpoint beq_nat (n m : nat) : bool :=
-  match n, m with
-    | O, O => true
-    | S _, O => false
-    | O, S _ => false
-    | S n', S m' => beq_nat n' m'
+Fixpoint beq_nat ( n m : nat ) : bool :=
+  match n with
+  | O => match m with
+         | O => true
+         | S _ => false
+         end
+  | S n' => match m with
+          | O => false
+          | S m' => beq_nat n' m'
+          end
   end.
+
 
 Eval compute in beq_nat 4 5.
 Eval compute in beq_nat 5 4.
 Eval compute in beq_nat 5 5.
 
-Fixpoint ble_nat (n m : nat) : bool :=
-  match n, m with
-    | O, O => true
-    | O, S _ => true
-    | S _, O => false
-    | S n', S m' => ble_nat n' m'
+Fixpoint ble_nat ( n m : nat ) : bool :=
+  match n with
+  | O => true
+  | S n' => match m with
+            | O => false
+            | S m' => ble_nat n' m'
+            end
   end.
 
 
@@ -413,36 +419,5 @@ Fixpoint bin_to_nat (b : bin) : nat :=
 
 Eval compute in bin_to_nat (Tb (Tb Ob)).
 
-Theorem binincr_comm :
-  forall (b : bin), bin_to_nat (incr b) = S(bin_to_nat b).
-Proof.
-  intro b. induction b as [ | n' | n'].
 
-  simpl. reflexivity.
-
-  simpl. reflexivity.
-
-  simpl. rewrite plus_n_O. rewrite plus_n_O.
-  rewrite IHn'. rewrite plus_n_Sm. simpl.
-  reflexivity.
-Qed.
-
-Fixpoint nat_to_bin (n : nat) : bin :=
-  match n with
-    | O => Ob
-    | S n' => incr (nat_to_bin n')
-  end.
-
-Eval compute in nat_to_bin 10.
-
-Theorem identity_conv : forall (n : nat),
-                          bin_to_nat (nat_to_bin n) = n.
-Proof.
-  intros n. induction n.
-
-  simpl. reflexivity.
-
-  simpl. rewrite binincr_comm.
-  rewrite IHn. reflexivity.
-Qed.
 
