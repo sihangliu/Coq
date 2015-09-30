@@ -483,3 +483,169 @@ Proof.
   Case "Cons n l". inversion H. assumption.
 Qed.
 
+Module R.
+
+  Inductive R : nat -> nat -> nat -> Prop :=
+  | c1 : R 0 0 0
+  | c2 : forall m n o, R m n o -> R (S m) n (S o)
+  | c3 : forall m n o, R m n o -> R m (S n) (S o)
+  | c4 : forall m n o, R (S m) (S n) (S (S o)) -> R m n o
+  | c5 : forall m n o, R m n o -> R n m o.
+
+  (* R 1 1 2 is provalbe. c2 -> c3 -> c1 *)
+  Theorem provalber112 : R 1 1 2.
+  Proof.
+    apply c2. apply c3. apply c1.
+  Qed.
+
+  
+  Theorem provalber226 : R 2 2 6.
+  Proof.
+    apply c3. apply c3. apply c5.
+    apply c3. apply c3.
+  Abort.
+End R.
+
+Inductive subseq {X : Type} : list X -> list X -> Prop :=
+| emptysubseq : forall l, subseq [] l
+| dropsubseq : forall x l1 l2, subseq l1 l2 -> subseq l1 (x :: l2)
+| keepsubseq : forall x l1 l2, subseq l1 l2 -> subseq (x :: l1) (x :: l2).
+
+Example subseqexample : subseq [1; 2; 3] [5; 6; 1; 9; 9; 2; 7; 3; 8].
+Proof.
+  apply dropsubseq. apply dropsubseq. apply keepsubseq.
+  apply dropsubseq. apply dropsubseq. apply keepsubseq.
+  apply dropsubseq. apply keepsubseq. apply emptysubseq.
+Qed.
+
+Theorem subseqreflexive : forall (X : Type) (l : list X), subseq l l.
+Proof.
+  intros X l. induction l.
+  Case "l = []". apply emptysubseq.
+  Case "l = x :: l". apply keepsubseq. apply IHl.
+Qed.
+
+Lemma app_right : forall (X : Type) (l : list X), l ++ [] = l.
+Proof.
+  intros X l. induction l.
+  Case "l = []". reflexivity.
+  Case "l = Cons n l".
+  {
+    simpl. rewrite IHl. reflexivity.
+  }
+Qed.
+
+Theorem subseq_app : forall (X : Type) (l1 l2 l3 : list X),
+                       subseq l1 l2 -> subseq l1 (l2 ++ l3).
+Proof.
+  intros X l1 l2 l3 H. induction H.
+  Case "emptysubseq". apply emptysubseq.
+  Case "dropsubseq". simpl. apply dropsubseq. assumption.
+  Case "keepsubseq". simpl. apply keepsubseq. assumption.
+Qed.
+
+Theorem subseq_trans : forall (X : Type) (l1 l2 l3 : list X),
+                         subseq l1 l2 -> subseq l2 l3 -> subseq l1 l3.
+Proof.
+  intros X l1 l2 l3 H1 H2. induction H1.
+  Case "emptysubseq". apply emptysubseq.
+Abort.
+
+Inductive R : nat -> list nat -> Prop :=
+ | c1 : R 0 []
+ | c2 : forall n l, R n l -> R (S n) (n :: l)
+ | c3 : forall n l, R (S n) l -> R n l.
+
+(* first  provable. second third is not *)
+
+Theorem r210 : R 2 [1; 0].
+Proof. apply c2. apply c2. apply c1. Qed.
+Theorem r11210 : R 1 [1;2;1;0].
+Proof. Abort.
+Theorem r63210 : R 6 [3;2;1;0].
+Proof. Abort.
+
+Check (2 + 2 = 4).
+Check (ble_nat 2 3 = false).
+Check (beautiful 8).
+Check (2 + 2 = 5).
+Check (beautiful 4).
+Theorem plus_2_2_is_4 : 2 + 2 = 4.
+Proof. compute. reflexivity. Qed.
+
+Definition plus_fact : Prop := 2 + 2 = 4.
+Check plus_fact.
+
+Theorem plus_fact_is_true : plus_fact.
+Proof. unfold plus_fact. reflexivity. Qed.
+
+Check (even 3).
+Check (even 4).
+Check even.
+
+Definition between (n m o: nat) : Prop :=
+  andb (ble_nat n o) (ble_nat o m) = true.
+
+Definition teen : nat -> Prop := between 13 19.
+Check teen.
+
+Definition true_for_zero (P : nat -> Prop) : Prop := P 0.
+
+Definition true_for_all_number (P : nat -> Prop) : Prop :=
+  forall n, P n.
+
+Definition preserverd_by_S (P : nat -> Prop) : Prop :=
+  forall n, P n -> P (S n).
+
+Definition natural_number_induction_valid : Prop :=
+  forall (P : nat -> Prop),
+    true_for_zero P -> preserverd_by_S P -> true_for_all_number P.
+
+Definition combine_odd_even (Podd Peven : nat -> Prop) : nat -> Prop :=
+  fun n => if evenb n then Peven n else Podd n.
+
+Theorem combine_odd_even_intro :
+  forall (Podd Peven : nat -> Prop) (n : nat),
+    (oddb n = true -> Podd n) ->
+    (oddb n = false -> Peven n) ->
+    combine_odd_even Podd Peven n.
+Proof.
+  intros Podd Peven n H1 H2.
+  unfold combine_odd_even. destruct (evenb n) eqn:Hev.
+  apply H2. unfold oddb. rewrite Hev. simpl. reflexivity.
+  apply H1. unfold oddb. rewrite Hev. simpl. reflexivity.
+Qed.
+
+Theorem combine_odd_even_elim_odd :
+  forall (Podd Peven : nat -> Prop) (n : nat),
+    combine_odd_even Podd Peven n ->
+    oddb n = true ->
+    Podd n.
+Proof.
+  unfold combine_odd_even. unfold oddb.
+  assert (forall n, negb (evenb n) = true -> evenb n = false).
+  {
+    intros n. destruct (evenb n) eqn:Hev.
+    Case "true". intros H. simpl in H. inversion H.
+    Case "false". simpl. intros H. reflexivity.
+  }
+  intros Podd Peven n H1 H2. apply H in H2. rewrite H2 in H1. assumption.
+Qed.
+
+Theorem combine_odd_even_elim_even :
+  forall (Podd Peven : nat -> Prop) (n : nat),
+    combine_odd_even Podd Peven n ->
+    oddb n = false ->
+    Peven n.
+Proof.
+  unfold combine_odd_even, oddb.
+  assert (forall n, negb (evenb n) = false -> evenb n = true).
+  {
+    intros n. destruct (evenb n) eqn: Hev.
+    Case "true". intros H. reflexivity.
+    Case "false". simpl. intros H. inversion H.
+  }
+  intros Podd Peven n H1 H2. apply H in H2. rewrite H2 in H1. assumption.
+Qed.
+
+(* finished all the problems *)
