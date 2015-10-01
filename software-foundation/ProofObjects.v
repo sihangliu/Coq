@@ -105,4 +105,68 @@ Definition conj_fact : forall P Q R, P /\ Q -> Q /\ R -> P /\ R :=
       | conj HP _, conj _ HR => conj P R HP HR
     end.
 
-      
+
+Definition beautiful_iff_gorgeous :
+  forall n, beautiful n <-> gorgeous n :=
+    fun (n : nat)  =>
+      conj (beautiful n -> gorgeous n) (gorgeous n -> beautiful n)
+           (beautiful__gorgeous n) (gorgeous__beautiful n).
+
+Definition or_commute : forall (P Q : Prop), P \/ Q -> Q \/ P :=
+  fun (P Q : Prop) =>
+    fun (H : P \/ Q) => match H with
+                          | or_introl H0 => or_intror Q P H0
+                          | or_intror H0 => or_introl Q P H0
+                        end.
+
+Check ex_intro.
+Check ex.
+Definition some_nat_is_even : Prop :=
+  ex _ ev.
+
+Definition snie : some_nat_is_even :=
+  ex_intro _ ev 4 (ev_SS 2 (ev_SS 0 ev_O)).
+
+Definition p : ex _ (fun n => beautiful (S n)) :=
+  ex_intro _ (fun n => beautiful (S n)) 4 b_5.
+
+Check plus_comm.
+Lemma plus_comm_r : forall a b c, c + (b + a) = c + (a + b).
+Proof.
+  intros a b c.
+  rewrite (plus_comm b a).
+  reflexivity.
+Qed.
+
+Lemma plus_comm_r' : forall a b c, c + (b + a) = c + (a + b).
+Proof.
+   intros a b c.
+   rewrite (plus_comm b).
+   reflexivity.
+Qed.
+
+Lemma plus_comm_r'' : forall a b c, c + (b + a) = c + (a + b).
+Proof.
+  intros a b c.
+  rewrite (plus_comm _ a).
+  reflexivity.
+Qed.
+
+Lemma plus_comm_r''' : forall a b c, c + (b + a) = c + (a + b).
+Proof.
+  intros a b c.
+  rewrite plus_comm with (n := b).
+  reflexivity.
+Qed.
+
+Check trans_eq.
+Example trans_eq_example' : forall (a b c d e f : nat),
+     [a;b] = [c;d] ->
+     [c;d] = [e;f] ->
+     [a;b] = [e;f].
+Proof.
+  intros a b c d e f H1 H2.
+  rewrite (trans_eq _ [a;b] [c;d] [e;f]).
+  reflexivity. assumption. assumption.
+Qed.
+
