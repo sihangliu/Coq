@@ -36,7 +36,7 @@ Inductive assert : Type :=
  | a_true
  | a_false.
 
-Fixpoint ia  ( m : string -> list Z -> Prop ) ( g : string -> Z ) 
+Fixpoint ia  ( m : string -> list Z -> Prop ) ( g : string -> Z )
   ( a : assert ) : Prop :=
  match a with
  | pred s l => m s ( map ( af g ) l )
@@ -48,7 +48,7 @@ Fixpoint ia  ( m : string -> list Z -> Prop ) ( g : string -> Z )
  end.
 
 Inductive a_instr : Type :=
- | pre ( a : assert ) ( i : a_instr ) 
+ | pre ( a : assert ) ( i : a_instr )
  | a_assign ( x : string ) ( e : aexpr )
  | a_seq ( i1 i2 : a_instr )
  | a_while ( b : bexpr ) ( a : assert ) ( i : a_instr ).
@@ -73,4 +73,3 @@ Fixpoint subst ( x : string )  ( s : aexpr ) ( a : assert ) : assert :=
  | a_not a => a_not ( subst x s a)
  | any => any
  end.
-
