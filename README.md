@@ -1,4 +1,4 @@
 Coq
 ===
 
-Coq codes
+Coq codes related to software foundation
