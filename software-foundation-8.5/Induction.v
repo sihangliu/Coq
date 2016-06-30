@@ -111,6 +111,8 @@ Proof.
   rewrite H. reflexivity.
 Qed.
 
+
+(*
 Theorem mult_comm : forall (n m : nat),
     m * n = n * m.
 Proof.
@@ -128,7 +130,83 @@ Proof.
     }
     rewrite H. reflexivity.
   }
+    Qed.
+
+proof is correct but may be something wrong with 
+proof-general or company-coq *)
+
+Theorem leb_refl : forall n : nat,
+    leb n n = Datatypes.true.
+Proof.
+  intros n. induction n.
+  + reflexivity.
+  + simpl. assumption.
 Qed.
 
 
+Theorem zero_nbeq_S : forall n : nat,
+    beq_nat 0 (S n) = Datatypes.false.
+Proof.
+  intros n. reflexivity.
+Qed.
+
+Theorem beq_nat_refl : forall n : nat,
+    Datatypes.true = beq_nat n n.
+Proof.
+  intros n. induction n.
+  - reflexivity.
+  - simpl. rewrite IHn. reflexivity.
+Qed.
+
+Theorem plus_swap' : forall (n m p : nat),
+    n + (m + p) = m + (n + p).
+Proof.
+  intros n m p.
+  rewrite plus_assoc. replace (n + m) with (m + n).
+  rewrite plus_assoc. reflexivity. rewrite plus_comm.
+  reflexivity.
+Qed.
+
+Fixpoint nat_to_bin (n : nat) : bin :=
+  match n with
+  | O =>Zero
+  | S n' => incr (nat_to_bin n')
+  end.
+
+Compute (nat_to_bin 100).
+
+Theorem nat_bin_identity :
+  forall n : nat, bin_to_nat (nat_to_bin n) = n.
+Proof.
+  intros n. induction n.
+  + reflexivity.
+  + simpl.
+    assert (H : forall b : bin, bin_to_nat (incr b) = S (bin_to_nat b)).
+    {
+      intros b. induction b.
+      + simpl. reflexivity.
+      + simpl. reflexivity.
+      + simpl. rewrite IHb. simpl. rewrite <- plus_n_Sm.
+        reflexivity.
+    }
+    rewrite H. rewrite IHn. reflexivity.
+Qed.
+
+
+Theorem mult_comm' : forall (n m : nat),
+    m * n = n * m.
+Proof.
+  intros n. induction n.
+  - intros m. rewrite mult_r_0. reflexivity.
+  - intros m. simpl. rewrite <- IHn.
+    assert (H : m + m * n = m * S n).
+    {
+      induction m.
+      + reflexivity.
+      + simpl.  rewrite <- IHm. rewrite plus_assoc.
+        rewrite plus_swap. rewrite plus_assoc.
+        reflexivity.
+    }
+    rewrite H. reflexivity.
+Qed.
 
