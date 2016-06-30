@@ -115,7 +115,7 @@ Theorem mult_comm : forall (n m : nat),
     m * n = n * m.
 Proof.
   intros n. induction n.
-  { intros m.  rewrite mult_r_0. reflexivity.}
+  { intros m. rewrite mult_r_0. reflexivity.}
   {
     intros m. simpl. rewrite <- IHn.
     assert (H : m + m * n = m * S n).
@@ -123,15 +123,12 @@ Proof.
       induction m.
       + reflexivity.
       + simpl.  rewrite <- IHm. rewrite plus_assoc.
-        rewrite plus_assoc.
-        assert (H : m + n = n + m).
-        {
-          rewrite plus_comm. reflexivity.
-        }
-        rewrite H. reflexivity.
+        rewrite plus_swap. rewrite plus_assoc.
+        reflexivity.
     }
     rewrite H. reflexivity.
   }
 Qed.
+
 
 
