@@ -115,4 +115,107 @@ Module Natlist.
     countoddmembers nil = 0.
   Proof. auto. Qed.
 
+  Fixpoint alternate (l1 l2 : natlist) : natlist :=
+    match l1, l2 with
+    | nil, _ => l2
+    | _, nil => l1
+    | h1 :: t1, h2 :: t2 => h1 :: h2 :: alternate t1 t2
+    end.
   
+  Example test_alternate1:
+    alternate [1;2;3] [4;5;6] = [1;4;2;5;3;6].
+  Proof. auto. Qed.
+
+  Example test_alternate3:
+    alternate [1;2;3] [4] = [1;4;2;3].
+  Proof. auto. Qed.
+
+  Example test_alternate4:
+    alternate [] [20;30] = [20;30].
+  Proof. auto. Qed.
+
+  Definition bag := natlist.
+
+  Fixpoint count (v : nat) (l : natlist) : nat :=
+    match l with
+    | nil => O
+    | h :: t => if beq_nat h v then S (count v t) else count v t
+    end.
+
+  Example test_count1: count 1 [1;2;3;1;4;1] = 3.
+  Proof. auto. Qed.
+
+  Example test_count2: count 6 [1;2;3;1;4;1] = 0.
+  Proof. auto. Qed.
+
+  Definition sum : bag -> bag -> bag :=
+    app.
+
+  Example test_sum1: count 1 (sum [1;2;3] [1;4;1]) = 3.
+  Proof. auto. Qed.
+
+  Definition add (v:nat) (s:bag) : bag :=
+    app [v] s.
+
+  Example test_add1: count 1 (add 1 [1;4;1]) = 3.
+  Proof. auto. Qed.
+
+  Example test_add2: count 5 (add 1 [1;4;1]) = 0.
+  Proof. simpl. reflexivity. Qed.
+
+  Check beq_nat.
+  Definition member (v:nat) (s:bag) : bool :=
+    negb (Basics.beq_nat O (count v s)).
+
+  Example test_member1: member 1 [1;4;1] = true.
+  Proof. auto. Qed.
+
+  Example test_member2: member 2 [1;4;1] = false.
+  Proof. auto. Qed.
+
+  Fixpoint remove_one (v : nat) (l : natlist) : natlist :=
+    match l with
+    | nil => nil
+    | h :: t => if Basics.beq_nat h v then t else h :: remove_one v t
+    end.
+             
+  Example test_remove_one1:
+    count 5 (remove_one 5 [2;1;5;4;1]) = 0.
+  Proof. auto. Qed.
+
+  Example test_remove_one2:
+    count 5 (remove_one 5 [2;1;4;1]) = 0.
+  Proof. auto. Qed.
+
+  Example test_remove_one3:
+    count 4 (remove_one 5 [2;1;4;5;1;4]) = 2.
+  Proof. auto. Qed.
+
+  Example test_remove_one4:
+    count 5 (remove_one 5 [2;1;5;4;5;1;4]) = 1.
+  Proof. simpl. reflexivity. Qed.
+
+  Fixpoint remove_all (v:nat) (s:bag) : bag :=
+    match s with
+    | nil => nil
+    | h :: t => if Basics.beq_nat h v then remove_all v t else h :: remove_all v t
+    end.
+
+  Example test_remove_all1: count 5 (remove_all 5 [2;1;5;4;1]) = 0.
+  Proof. auto. Qed.
+
+  Example test_remove_all2: count 5 (remove_all 5 [2;1;4;1]) = 0.
+  Proof. auto. Qed.
+
+  Example test_remove_all3: count 4 (remove_all 5 [2;1;4;5;1;4]) = 2.
+  Proof. auto. Qed.
+
+  Example test_remove_all4: count 5 (remove_all 5 [2;1;5;4;5;1;4;5;1;4]) = 0.
+  Proof. auto. Qed.
+
+  
+  
+      
+                    
+    
+    
