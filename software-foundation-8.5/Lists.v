@@ -213,9 +213,99 @@ Module Natlist.
   Example test_remove_all4: count 5 (remove_all 5 [2;1;5;4;5;1;4;5;1;4]) = 0.
   Proof. auto. Qed.
 
+  Fixpoint subset (s1 : bag) (s2 : bag) : bool :=
+    match s1 with
+    | nil => true
+    | h :: t =>
+      if member h s2 then subset t (remove_one h s2)
+      else false
+    end.
+
+  Example test_subset1: subset [1;2] [2;1;4;1] = true.
+  Proof. simpl. reflexivity. Qed.
+  Example test_subset2: subset [1;2;2] [2;1;4;1] = false.
+  Proof. simpl. reflexivity. Qed.
+
+  Theorem nil_app : forall l : natlist,
+      nil ++ l = l.
+  Proof. auto. Qed.
+
+  Theorem tl_length_pred : forall l : natlist,
+      pred (length l) = length (tl l).
+  Proof.
+    intros l. induction l.
+    + auto.
+    + simpl. reflexivity.  
+  Qed.
+
+ 
+  Theorem app_assoc : forall l1 l2 l3 : natlist,
+      (l1 ++ l2) ++ l3 = l1 ++ (l2 ++ l3).
+  Proof.
+    intros l1.  induction l1.
+    {
+      intros l2 l3. auto.
+    }
+    {
+      intros l2 l3. simpl. rewrite <- IHl1. reflexivity.
+    }
+  Qed.
+
+  Fixpoint rev (l : natlist) : natlist :=
+    match l with
+    | nil => nil
+    | h :: t => rev t ++ [h]
+    end.
+
   
+    
+  Theorem rev_length_firsttry : forall l : natlist,
+      length (rev l) = length l.
+  Proof.
+    intros l. induction l.
+    + auto.
+    + simpl.
+      assert (H : forall l1 l2 : natlist, length (l1 ++ l2) = length l1 + length l2).
+      {
+        intros l1. induction l1.
+        + auto.
+        + intros l2. simpl. rewrite IHl1.
+          auto.
+      }
+      rewrite H. simpl. rewrite IHl.
+      rewrite plus_comm. simpl. reflexivity.
+  Qed.
+
+  Theorem app_nil_r : forall l : natlist,
+      l ++ [] = l.
+  Proof.
+    intros l. induction l.
+    + auto.
+    + simpl. rewrite IHl. reflexivity.
+  Qed.
+
+  Theorem rev_involutive : forall l : natlist,
+      rev (rev l) = l.
+  Proof.
+    intros l. induction l.
+    + auto.
+    + simpl.
+      assert (H : forall (n : nat) (l : natlist) , rev (l ++ [n]) = n :: rev l).
+      {
+        intros n0 l0. induction l0.
+        + auto.
+        + simpl. rewrite IHl0. simpl. reflexivity.
+      }
+      rewrite H. rewrite IHl.
+      reflexivity.
+  Qed.
+
+  Theorem app_assoc4 : forall l1 l2 l3 l4 : natlist,
+      l1 ++ (l2 ++ (l3 ++ l4)) = ((l1 ++ l2) ++ l3) ++ l4.
+  Proof.
+    intros l1 l2 l3 l4.
+    rewrite app_assoc. rewrite app_assoc.
+    reflexivity.
+  Qed.
+
   
-      
-                    
-    
-    
