@@ -97,7 +97,64 @@ Proof. reflexivity. Qed.
 Example test_length1: length (cons 1 (cons 2 (cons 3 nil))) = 3.
 Proof. reflexivity. Qed.
 
+Fail Definition mynil := nil.
+Check @nil.
+Check @nil nat.  
 
-  
-  
-  
+Notation "x :: y" := (cons x y)
+                     (at level 60, right associativity).
+Notation "[ ]" := nil.
+Notation "[ x ; .. ; y ]" := (cons x .. (cons y []) ..).
+Notation "x ++ y" := (app x y)
+                       (at level 60, right associativity).
+
+Definition list123''' := [1; 2; 3].
+
+Theorem app_nil_r : forall (X:Type), forall l:list X,
+      l ++ [] = l.
+Proof.
+  intros X l. induction l.
+  + auto.
+  + simpl. rewrite IHl. reflexivity.
+Qed.
+
+Theorem app_assoc : forall A (l m n:list A),
+    l ++ m ++ n = (l ++ m) ++ n.
+Proof.
+  intros A l m n.
+  simpl. induction l.
+  + auto.
+  + simpl. rewrite IHl. auto.
+Qed.
+
+Lemma app_length : forall (X:Type) (l1 l2 : list X),
+  length (l1 ++ l2) = length l1 + length l2.
+Proof.
+  intros X l1. induction l1.
+  + auto.
+  + simpl. intros l2. rewrite IHl1. auto.
+Qed.
+
+Theorem rev_app_distr: forall (X : Type) (l1 l2 : list X),
+    rev (l1 ++ l2) = rev l2 ++ rev l1.
+Proof.
+  intros X l1. induction l1.
+  + simpl. intros l2. rewrite  app_nil_r. reflexivity.
+  + simpl. intros l2. rewrite IHl1. rewrite <- app_assoc.
+    reflexivity.
+Qed.
+
+Theorem rev_involutive : forall (X : Type), forall (l : list X),
+      rev (rev l) = l.
+Proof.
+  intros X l. induction l.
+  + auto.
+  + simpl. assert (H : forall (x : X) (l : list X), rev (l ++ [x]) = x :: rev l).
+    {
+      intros x0 l0. induction l0.
+      + auto.
+      + simpl. rewrite IHl0. auto.
+    }
+    rewrite H. rewrite IHl. reflexivity.
+Qed.
+
