@@ -523,3 +523,21 @@ Proof.
   simpl. reflexivity.
 Qed.
 
+Module Chruch.
+
+  Definition nat := forall (X : Type), (X -> X) -> X -> X.
+  Definition one :=
+    fun (X : Type) (f : X -> X) (x : X) => f x. 
+
+  Definition two :=
+    fun (X : Type) (f : X -> X) (x : X) => f (f x).
+
+  Definition zero :=
+    fun (X : Type) (f : X -> X) (x : X) => x.
+
+  Definition three : nat := @doit3times.
+
+  Check zero.
+  (* Come here and solve it again *)
+
+End Chruch.
