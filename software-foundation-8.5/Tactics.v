@@ -164,4 +164,16 @@ Theorem plus_n_n_injective : forall n m,
      n = m.
 Proof.
   intros n. induction n.
-  + intros m H. simpl in H.
+  + intros m H. simpl in H. induction m.
+    reflexivity.
+    inversion  H.
+  + intros m H. simpl in H. induction m.
+    inversion H. simpl in H. inversion H.
+    rewrite <- plus_n_Sm in H1. rewrite <- plus_n_Sm in H1.
+    inversion H1.
+    apply IHn in H2. rewrite H2. reflexivity.
+Qed.
+
+(* hell yeah. Finally solved in it one go :) *)
+
+
