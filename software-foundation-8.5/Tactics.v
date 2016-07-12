@@ -177,3 +177,150 @@ Qed.
 (* hell yeah. Finally solved in it one go :) *)
 
 
+Theorem double_injective : forall n m,
+     double n = double m ->
+     n = m.
+Proof.
+  intros n. induction n.
+  + simpl. intros m. induction m.
+   {  auto. }
+   {  simpl. intros H. inversion H. }
+  + intros m. induction m.
+    { simpl. intros H. inversion H. }
+    { simpl. intros H. apply f_equal.
+      inversion H. apply IHn. assumption.
+    }
+Qed.
+
+Theorem beq_nat_true : forall n m,
+    Basics.beq_nat n m = true -> n = m.
+Proof.
+  intros n. induction n.
+  + intros m. induction m.
+    { auto. }
+    { intros H. simpl in H. discriminate. }
+  + intros m. induction m.
+    { intros H. simpl in H. discriminate. }
+    { simpl. intros H. apply f_equal. apply IHn.
+      assumption.
+    }
+Qed.
+
+Theorem beq_id_true : forall x y,
+    beq_id x y = true -> x = y.
+Proof.
+  intros x y. destruct x. destruct y.
+  simpl. intros H. apply f_equal. apply beq_nat_true.
+  assumption.
+Qed.
+
+Theorem nth_error_after_last: forall (n : nat) (X : Type) (l : list X),
+     length l = n ->
+     nth_error l n = None.
+Proof.
+  intros n X l. generalize dependent l. generalize dependent n.
+  induction n.
+  {
+    destruct l.
+    intros H. simpl. reflexivity.
+    simpl. intros H. inversion H.
+  }
+  {
+    destruct l.
+    simpl. intros H; inversion H.
+    simpl. intros H. apply IHn. inversion H. reflexivity.
+  }
+Qed.
+
+Lemma app_length_commute : forall (X : Type) (l1 l2 : list X),
+    length (l1 ++ l2) = length l1 + length l2.
+Proof.
+  intros X l1. induction l1.
+  simpl. intros l2. auto.
+  simpl. intros l2. apply f_equal. apply IHl1.
+Qed. 
+  
+Theorem app_length_twice : forall (X:Type) (n:nat) (l:list X),
+     length l = n ->
+     length (l ++ l) = n + n.
+Proof.
+  intros X n l H. rewrite app_length_commute. rewrite H.
+  reflexivity.
+Qed.
+
+Theorem app_length_twice' : forall (X:Type) (n:nat) (l:list X),
+     length l = n ->
+     length (l ++ l) = n + n.
+Proof.
+  intros X n l. generalize dependent n. generalize dependent  l.
+  induction l.
+  intros n. simpl. intros H. rewrite <- H. auto.
+  intros n H. destruct n. inversion H.
+  simpl. apply f_equal.
+  assert (H1 : forall (X : Type) (x : X) (l1 l2: list X),
+             length (l1 ++ x :: l2) = S (length (l1 ++ l2))).
+  {
+    intros. induction l1.
+    simpl. auto.
+    simpl. apply f_equal. rewrite IHl1. reflexivity.
+  }
+  rewrite H1. rewrite <- plus_n_Sm. apply f_equal.
+  apply IHl. inversion H. reflexivity.
+Qed.
+
+Theorem double_induction: forall (P : nat -> nat -> Prop),
+  P 0 0 ->
+  (forall m, P m 0 -> P (S m) 0) ->
+  (forall n, P 0 n -> P 0 (S n)) ->
+  (forall m n, P m n -> P (S m) (S n)) ->
+  forall m n, P m n.
+Proof.
+  intros  P H1 H2 H3 H4. induction m.
+  {
+    induction n. apply H1. apply H3. assumption.
+  }
+  {
+    induction n. apply H2. apply IHm. apply H4.
+    apply IHm.
+  }
+Qed.
+
+Definition square n := n * n.
+
+Lemma square_mult : forall n m, square (n * m) = square n * square m.
+Proof.
+  intros n m. unfold square.
+  assert (H : n * m * n = n * n * m).
+  { rewrite mult_comm. apply mult_assoc. }
+  rewrite mult_assoc. rewrite H. rewrite mult_assoc.
+  auto.
+Qed.
+
+Definition foo (x: nat) := 5.
+Fact silly_fact_1 : forall m, foo m + 1 = foo (m + 1) + 1.
+Proof.
+  intros m. simpl. reflexivity.
+Qed.
+
+Definition bar (x : nat) : nat :=
+  match x with
+  | O => 5
+  | S _ => 5
+  end.
+
+Fact silly_fact_2_FAILED : forall m, bar m + 1 = bar (m + 1) + 1.
+Proof.
+  intros m.  simpl.
+Abort.
+
+Fact silly_fact_2 : forall m, bar m + 1 = bar (m + 1) + 1.
+Proof.
+  intros m. destruct m.
+  simpl. reflexivity.
+  simpl. reflexivity.
+Qed.
+
+Definition sillyfun1 (n : nat) : bool :=
+  if Basics.beq_nat n 3 then true
+  else if Basics.beq_nat n 5 then true
+       else false.
