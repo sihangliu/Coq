@@ -394,3 +394,39 @@ Proof.
       right. apply IHl. exists x0. split. assumption. assumption.
 Qed.
 
+Lemma in_app_iff : forall A l l' ( a : A),
+    In a (l ++ l') <-> In a l \/ In a l'.
+Proof.
+  split. generalize l l' a. induction l0.
+  - simpl. intros. right. assumption.
+  - simpl. intros. destruct H as [H1 | H1]. left. left. assumption.
+    apply or_assoc. right. apply IHl0. assumption.
+  -  generalize l l' a. induction l0.
+     + simpl. intros. destruct H. inversion H. assumption.
+     + simpl. intros. destruct H as [[H1 | H1] | H1]. left. assumption.
+       right. apply IHl0. left. assumption. right. apply IHl0. right. assumption.
+Qed.
+
+Fixpoint All {T : Type} (P : T -> Prop) (l : list T) : Prop :=
+  match l with
+  | [] => True
+  | x :: l' =>
+    P x /\ All P l'
+  end.
+
+Lemma All_In :
+  forall (T : Type) (P : T -> Prop) (l : list T),
+    (forall x, In x l -> P x) <->
+    All P l.
+Proof.
+  split.
+  - generalize l. induction l0.
+    + simpl. intros. apply I.
+    + simpl. intros. split.
+      apply H. left. reflexivity. apply IHl0. intros. apply H. right. assumption.
+  - generalize l. induction l0.
+    + simpl. intros. inversion H0.
+    + simpl. intros. destruct H0 as [H1 | H1]. destruct H as [H2 H3]. rewrite H1. assumption.
+      destruct H as [H2 H3]. apply IHl0. assumption. assumption.
+Qed.
+
