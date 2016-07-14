@@ -430,3 +430,34 @@ Proof.
       destruct H as [H2 H3]. apply IHl0. assumption. assumption.
 Qed.
 
+Definition combine_odd_even (Podd Peven : nat -> Prop) : nat -> Prop :=
+  fun n => if evenb n then Peven n else Podd n.
+
+Theorem combine_odd_even_intro : 
+  forall (Podd Peven : nat -> Prop) (n : nat),
+    (oddb n = true -> Podd n) ->
+    (oddb n = false -> Peven n) ->
+    combine_odd_even Podd Peven n.
+Proof.
+  intros podd peven n. unfold oddb. unfold combine_odd_even.
+  intros H1 H2. destruct evenb.
+  apply H2. reflexivity.
+  apply H1. reflexivity.
+Qed.
+
+Definition combine_odd_even' (Podd Peven : nat -> Prop) : nat -> Prop :=
+  fun n => Peven n \/ Podd n.
+
+
+Theorem combine_odd_even_intro' : 
+  forall (Podd Peven : nat -> Prop) (n : nat),
+    (oddb n = true -> Podd n) ->
+    (oddb n = false -> Peven n) ->
+    combine_odd_even' Podd Peven n.
+Proof.
+  intros podd peven n. unfold oddb. unfold combine_odd_even'.
+  destruct evenb.
+  - intros H1 H2. left. apply H2. reflexivity.
+  - intros H1 H2. right. apply H1. reflexivity.
+Qed.
+
