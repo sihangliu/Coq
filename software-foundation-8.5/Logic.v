@@ -461,3 +461,97 @@ Proof.
   - intros H1 H2. right. apply H1. reflexivity.
 Qed.
 
+Check plus_comm.
+
+Lemma plus_comm3_take2 :
+  forall n m p, n + (m + p) = (p + m) + n.
+Proof.
+  intros n m p.
+  rewrite plus_comm.
+  rewrite (plus_comm m).
+  reflexivity.
+Qed.
+
+Example lemma_application_ex :
+  forall {n : nat} {ns : list nat},
+    In n (map (fun m => m * 0) ns) ->
+    n = 0.
+Proof.
+  intros n ns H.
+  destruct (proj1 _ _ (In_map_iff _ _ _ _ _) H) as [m [Hm _]].
+  rewrite mult_0_r in Hm. rewrite Hm. reflexivity.
+Qed.
+
+Axiom functional_extensionality : forall {X Y : Type} {f g : X -> Y},
+    (forall (x : X), f x = g x) -> f = g.
+
+Lemma plus_comm_ext : plus = fun n m => m + n.
+Proof.
+  apply functional_extensionality. intros x.
+  apply functional_extensionality. intros x0.
+  apply plus_comm.
+Qed.
+
+Print Assumptions plus_comm_ext.
+
+Fixpoint rev_append {X : Type} (l1 l2 : list X) : list X :=
+  match l1 with
+  | [] => l2
+  | h :: t => rev_append t (h :: l2)
+  end.
+
+Compute (rev_append [1;2;3;4] []).  
+Definition tr_rev {X : Type} (l : list X) : list X :=
+  rev_append l [].
+
+Lemma tr_rev_correct : forall (X : Type), @tr_rev X = @rev X.
+Proof.
+  intros X. apply functional_extensionality. intros x.
+  induction x.
+  - auto.
+  - simpl. rewrite <- IHx. unfold tr_rev.
+Abort.
+
+Theorem evenb_double : forall k, evenb (double k) = true.
+Proof.
+  intros k. induction k.
+  - auto.
+  - simpl. assumption.
+Qed.
+
+Theorem evenb_double_conv : forall n,
+  exists k, n = if evenb n then double k
+           else S (double k).
+Proof.
+  intros n. induction n.
+  - simpl. exists 0. auto.
+  - rewrite evenb_S.
+    destruct evenb. simpl. destruct IHn. exists x. auto.
+    simpl. destruct IHn. rewrite H. exists (S x). simpl. reflexivity.
+Qed.
+
+Theorem even_bool_prop : forall n,
+    evenb n = true <-> exists k, n = double k.
+Proof.
+  intros n. split.
+  intros H. destruct (evenb_double_conv n) as [k Hk].
+  rewrite Hk. rewrite H. exists k. reflexivity.
+  intros [k Hk]. rewrite Hk.
+ apply evenb_double. 
+Qed.
+
+Theorem beq_nat_true_iff : forall n1 n2 : nat,
+    Basics.beq_nat n1 n2 = true <-> n1 = n2.
+Proof.
+  split. intros H. apply beq_nat_true. auto.
+  intros H. assert (forall (m n : nat), m = n -> Basics.beq_nat m n = true).
+  {
+    induction m.
+    - intros n H1. rewrite <- H1. simpl. reflexivity.
+    - intros n H1. induction n.
+      + inversion H1.
+      + simpl. apply IHm. inversion H1. reflexivity.
+  }
+  apply H0. assumption.
+Qed.
+
