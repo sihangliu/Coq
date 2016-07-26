@@ -91,28 +91,23 @@ Proof.
 Qed.
 
 Inductive gcd : nat -> nat -> nat -> Prop :=
-|cons_a a b : a = 0 -> gcd a b b
-|cons_b a b c : b > a -> gcd b a c -> gcd a b c
-|cons_c a b c : a >= b -> gcd (a - b) b c -> gcd a b c. 
+|cons_a a b : a = b -> gcd a b b
+|cons_b a b c : b > a -> gcd a (b - a) c -> gcd a b c
+|cons_c a b c : a > b -> gcd (a - b) b c -> gcd a b c. 
 
 Lemma gcd_0 : gcd 10 3 1.
 Proof.
   constructor 3. omega. constructor 3. omega. simpl.
   constructor 3. omega. simpl. constructor 2. omega.
-  constructor 3. omega. simpl. constructor 3. omega.
-  simpl. constructor 3. omega. simpl. constructor 1.
-  reflexivity.
+  simpl. constructor 2. omega. simpl. constructor 1.
+  auto.
 Qed.
 
 Print gcd_0.
 
 Lemma gcd_1 : forall n : nat, gcd n n n.
 Proof.
-  intros. constructor 3. omega. assert (H : n - n = 0 ) by omega.
-  rewrite H. constructor 1. reflexivity.
+  intros. constructor 1. auto.
 Qed.
 
-
-
-  Program Fixpoint gcd (x y : nat) (H : y <= x) : nat :=
   
