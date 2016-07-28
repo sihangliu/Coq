@@ -786,3 +786,26 @@ Proof.
   }
 Qed.
 
+Theorem excluded_middle_irrefutable: forall (P:Prop),
+  ~ ~ (P \/ ~ P).
+Proof.
+  unfold not. intros P f. apply f. right. intros.
+  apply f. left. assumption.
+Qed.
+
+Definition excluded_middle := forall P : Prop,
+    P \/ ~ P.
+
+Theorem not_exists_dist :
+  excluded_middle ->
+  forall (X:Type) (P : X -> Prop),
+    ~ (exists x, ~ P x) -> (forall x, P x).
+Proof.
+  unfold excluded_middle. intros. unfold not in H0.
+  unfold not in H. destruct (H (P x)) as [H1 | H1]; trivial.
+  destruct H0. exists x. trivial.
+Qed.
+
+Definition peirce := forall P Q: Prop,
+  ((P -> Q)->P)->P.
+
