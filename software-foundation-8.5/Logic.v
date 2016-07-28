@@ -555,3 +555,234 @@ Proof.
   apply H0. assumption.
 Qed.
 
+Lemma andb_true_iff : forall b1 b2:bool,
+    b1 && b2 = true <-> b1 = true /\ b2 = true.
+Proof.
+  split. intros H. destruct b1.
+  - destruct b2.
+    + auto.
+    + auto.
+  - destruct b2.
+    + auto.
+    + auto.
+  - destruct b1.
+    + destruct b2. intros H. auto.
+      intros H. simpl. destruct H. assumption.
+    + destruct b2. intros H. simpl. destruct H. assumption.
+      simpl. intros H. destruct H. assumption.
+Qed.
+
+Example even_1000 : exists k, 1000 = double k.
+Proof.
+  exists 500. auto.
+Qed.
+
+Print even_bool_prop.
+
+Example even_1000'' : exists k, 1000 = double k.
+Proof. apply even_bool_prop. auto. Qed.
+
+Lemma orb_true_iff : forall b1 b2,
+  b1 || b2 = true <-> b1 = true \/ b2 = true.
+Proof.
+  split.
+  {
+    destruct b1.
+    - auto.
+    - auto.
+  }
+  {
+    destruct b1.
+    - auto.
+    - simpl. intros. destruct H as [H | H]. congruence. trivial.
+  }
+Qed.
+
+Theorem beq_nat_false_iff : forall x y : nat,
+  Basics.beq_nat x y = false <-> x <> y.
+Proof.
+  split.
+  {
+    generalize dependent y. generalize dependent x.
+    simple induction x.
+    {
+      induction y.
+      - simpl. congruence.
+      - simpl. intros. omega.
+    }
+    {
+      induction y.
+      - auto.
+      - simpl. intros. apply H in H0.  injection. intros. congruence.
+    }
+  }
+  {
+    generalize dependent y. generalize dependent x.
+    simple induction x.
+    {
+      destruct y.
+      - intros. simpl. congruence.
+      - auto.
+    }
+
+    {
+      destruct y.
+      - auto.
+      - intros. simpl. apply H. omega.
+    }
+  }
+Qed.
+
+Print beq_nat_false_iff.
+
+(* Inductive definition of two equal list *)
+
+Inductive Equal_list {A : Type} : list A -> list A -> Prop :=
+| zero_l : Equal_list [] []
+| cons_l x l1 l2 : Equal_list l1 l2 -> Equal_list (x :: l1) (x :: l2). 
+
+Lemma equallist_1 : Equal_list [1;2;3] [1;2;3].
+Proof.
+  repeat (constructor 2). constructor 1.
+Qed.
+
+Lemma equallist_2 : forall (A : Type) (l : list A),
+    Equal_list l l.
+Proof.
+  intros. induction l.
+  - constructor 1.
+  - constructor 2. trivial.
+Qed.
+
+Fixpoint beq_list {A} (beq : A -> A -> bool)
+         (l1 l2 : list A) : bool :=
+  match l1 with
+  | nil => match l2 with
+          | nil => true
+          | _ => false
+          end
+  | h1 :: t1 => match l2 with
+               | nil => false
+               | h2 :: t2 => andb (beq h1 h2) (beq_list beq t1 t2)
+               end
+  end.
+
+
+Lemma beq_list_true_iff :
+  forall (A : Type) (beq : A -> A -> bool),
+    (forall a1 a2, beq a1 a2 = true <-> a1 = a2) ->
+    forall l1 l2, beq_list beq l1 l2 = true  <-> l1 = l2.
+Proof.
+  split.
+  {
+    generalize dependent l2. generalize dependent l1.
+    simple induction l1.
+    {
+      destruct l2.
+      - auto.
+      - simpl. intros. inversion H0.
+    }
+    {
+      destruct l2.
+      - simpl. intros. inversion H1.
+      - simpl. destruct (H x a). intros. SearchAbout (_ && _ = true).
+        apply andb_true_iff in H3. destruct H3 as [H4 H5].
+        apply H1 in H4. rewrite H4. apply f_equal. apply H0. trivial.         
+    }
+  }
+  {
+    generalize dependent l2. generalize dependent l1.
+    simple induction l1.
+    {
+      destruct l2.
+      - auto.
+      - intros. congruence.
+    }
+    {
+      destruct l2.
+      - intros. congruence.
+      - intros. simpl. rewrite andb_true_iff. split.
+        + destruct (H x a). apply H3. inversion H1. trivial.
+        + apply H0. inversion H1. trivial.
+    }
+  }
+Qed.
+
+Print beq_list_true_iff.
+
+Fixpoint forallb {X : Type} (test : X -> bool) (l : list X) : bool :=
+  match l with
+  | nil => true
+  | h :: t => andb (test h) (forallb test t)
+  end.
+
+Inductive Forallb {X : Type} (f : X -> bool) : list X -> bool -> Prop :=
+| empty_list : Forallb f [] true
+| cons_list d x l : Forallb f l d -> Forallb f (x :: l) (f x  && d). 
+
+Fixpoint even (n : nat) : bool :=
+  match n with
+  | 0 => true
+  | 1 => false
+  | S (S n') => even n'
+  end.
+
+Lemma forallb_0 : Forallb even [2;4;6] true.
+Proof.
+  repeat (constructor 2 with (d := true)).
+  constructor 1.  
+Qed.
+
+Lemma forallb_1 : Forallb even [1;2;4] false.
+Proof.
+  constructor 2 with (d := true).
+  constructor 2 with (d := true).
+  constructor 2 with (d := true).
+  constructor 1.
+Qed.
+
+Print forallb_1.
+
+Inductive ForallB {X : Type} (f : X -> bool): list X -> Prop :=
+|emp_list : ForallB f []
+|con_list x l : f x = true -> ForallB f l -> ForallB f (x :: l).
+
+Lemma forallbequiForallb :
+  forall (X : Type) (f : X -> bool) (l : list X), forallb f l = true <-> Forallb f l true.
+Proof.
+  split.
+  {
+    induction l.
+      - simpl. intros. constructor 1.
+      - simpl. intros. rewrite andb_true_iff in H.
+        destruct H as [H1 H2].
+        replace true with (andb (f x) true).
+        constructor 2 with (d := true) (x := x) (l := l).
+        apply IHl. trivial. rewrite H1. auto.
+  }
+  {
+    induction l.
+    - simpl. auto.
+    - simpl. intros. inversion H. apply andb_true_iff in H3. destruct H3 as [H4 H5].
+      rewrite H4, H5. simpl. apply IHl. rewrite <- H5. assumption.
+  }
+Qed.
+
+Theorem forallb_true_iff : forall X test (l : list X),
+   forallb test l = true <-> All (fun x => test x = true) l.
+Proof.
+  split.
+  {
+    induction l.
+    - simpl. auto.
+    - simpl. rewrite andb_true_iff. intros. destruct H as [H1 H2].
+      split; trivial. apply IHl in H2; trivial.
+  }
+  {
+    induction l.
+    - simpl. auto.
+    - simpl. rewrite andb_true_iff. intros. destruct H as [H1 H2].
+      split. trivial. apply IHl in H2. trivial.
+  }
+Qed.
+
