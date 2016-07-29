@@ -107,3 +107,103 @@ Proof.
   }
 Qed.
 
+Print NoDup.
+
+
+Inductive Edge : nat -> nat -> nat -> Prop :=
+  Arc a b c : Edge a b c.
+
+Inductive Path : nat -> nat -> nat -> Prop :=
+|Unit_path a b w : Edge a b w -> Path a b w
+|Cons_path a b c w v m : Edge a b w -> Path b c v -> m <= w -> m <= v -> Path a c m.
+
+SearchAbout (_ <= _).
+Check 1 <= 0.
+Print Path_ind.
+
+(* winner is 5th node E *)
+Lemma path_40 : Path 4 0 25.
+Proof.
+  constructor 2 with (a := 4) (b := 3) (c := 0) (w := 31) (v := 25).
+  apply (Arc 4 3 31).
+  constructor 2 with (a := 3) (b := 2) (c := 0) (w := 28) (v := 25).
+  apply (Arc 3 2 28).
+  constructor 2 with (a := 2) (b := 1) (c := 0) (w := 29) (v := 25).
+  apply (Arc 2 1 29).
+  constructor 1 with (a := 1) (b := 0) (w := 25).
+  apply (Arc 1 0 25).
+  omega. omega. omega. omega. omega. omega.
+Qed.
+
+Print path_40.
+
+Lemma path_41 : Path 4 1 28.
+Proof.
+  constructor 2 with (a := 4) (b := 3) (c := 1) (w := 31) (v := 28).
+  apply (Arc 4 3 31).
+  constructor 2 with (a := 3) (b := 2) (c := 1) (w := 28) (v := 29).
+  apply (Arc 3 2 28).
+  constructor 1 with (a := 2) (b := 1) (w := 29).
+  apply (Arc 2 1 29).
+  omega. omega. omega. omega.
+Qed.
+
+Module  Vote.
+  Variable cand : Type.
+  Inductive Edge : cand -> cand -> nat -> Prop :=
+    Arc l m w : Edge l m w.
+
+  Variable a b c d e : cand.
+  Variable n n1 n2 n3 n4 : nat.
+
+  Inductive Path : cand -> cand -> nat -> Prop :=
+    | Unit_path a b w : Edge a b w -> Path a b w
+    | Cons_path a b c w v m : Edge a b w -> Path b c v -> m <= w -> m <= v -> Path a c m.
+
+  Lemma path_ea : forall (n1 n2 n3 n4 n m o : nat) (a b c d e : cand),
+      n <= n1 /\ n <= n2 /\ n <= n3 /\ n <= n4 /\ m <= n2 /\ m <= n3 /\ m <= n4
+      /\ o <= n3 /\ o <= n4 /\ n <= m /\ m <= o
+      -> Edge e d n1 -> Edge d c n2 -> Edge c b n3
+      -> Edge b a n4 -> Path e a n.
+  Proof.
+    intros n1 n2 n3 n4 n m o a b c d e H E1 E2 E3 E4.
+    constructor 2 with (b := d) (w := n1) (v := m).
+    assumption.
+    constructor 2 with (b := c) (w := n2) (v := o).
+    assumption.
+    constructor 2 with (b := b) (w := n3) (v := n4).
+    assumption.
+    constructor 1 with (a := b) (b := a). assumption. omega. omega. omega. omega. omega.
+    omega.
+  Qed.
+
+  Lemma path_eb : forall (n1 n2 n3 n m : nat) (b c d e : cand),
+      n <= n1 /\ n <= n2 /\ n <= n3 /\ m <= n2 /\ m <= n3 /\ n <= m -> Edge e d n1 -> Edge d c n2 ->
+      Edge c b n3 -> Path e b n.
+  Proof.
+    intros n1 n2 n3 n m b c d e H E1 E2 E3.
+    constructor 2 with (b := d) (w := n1) (v := m).
+    assumption.
+    constructor 2 with (b := c) (w := n2) (v := n3).
+    assumption.
+    constructor 1. assumption. omega. omega. omega. omega.
+  Qed.
+
+  Lemma path_ec : forall (n1 n2 n : nat) (c d e : cand),
+      n <= n1 /\ n <= n2 -> Edge e d n1 -> Edge d c n2 -> Path e c n.
+  Proof.
+    intros n1 n2 n c d e H E1 E2.
+    constructor 2 with (b := d) (w := n1) (v := n2).
+    assumption.
+    constructor 1. assumption. omega. omega.
+  Qed.
+
+  Lemma path_ed : forall (n1 : nat) (d e : cand),
+      Edge d e n1 -> Path d e n1.
+  Proof.
+    intros n1 d e E.
+    constructor 1. assumption.
+  Qed.
+
+End Vote.
+
