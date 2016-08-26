@@ -1,5 +1,6 @@
 Require Export Logic.
 
+
 Inductive  ev : nat -> Prop :=
 | ev_0 : ev 0
 | ev_SS n : ev n -> ev (S (S n)).
@@ -158,9 +159,18 @@ Module  Vote.
 
   Inductive Path : cand -> cand -> nat -> Prop :=
     | Unit_path a b w : Edge a b w -> Path a b w
-    | Cons_path a b c w v m : Edge a b w -> Path b c v -> m <= w -> m <= v -> Path a c m.
-
-  Lemma path_ea : forall (n1 n2 n3 n4 n m o : nat) (a b c d e : cand),
+    | Cons_path a b c w v m : Edge a b w -> Path b c v -> m <= w -> m <= v
+                                 -> Path a c m.
+  Check [Edge a b 5; Edge b c 10].
+  Definition max (a b : nat) : Prop :=
+    a >= b \/ b >= a.
+  Lemma mx : max 2 3.
+  Proof.
+    unfold max.
+    right. omega.
+  Qed.
+  
+    Lemma path_ea : forall (n1 n2 n3 n4 n m o : nat) (a b c d e : cand),
       n <= n1 /\ n <= n2 /\ n <= n3 /\ n <= n4 /\ m <= n2 /\ m <= n3 /\ m <= n4
       /\ o <= n3 /\ o <= n4 /\ n <= m /\ m <= o
       -> Edge e d n1 -> Edge d c n2 -> Edge c b n3
@@ -204,6 +214,42 @@ Module  Vote.
     intros n1 d e E.
     constructor 1. assumption.
   Qed.
-
+  
 End Vote.
 
+Module Evote.
+  Require Import Notations.
+  Require Import Coq.Lists.List.
+  Require Import Coq.Arith.Le.
+  Require Import Coq.Numbers.Natural.Peano.NPeano.
+  Require Import Coq.Arith.Compare_dec.
+  Require Import Coq.omega.Omega.
+  Import ListNotations.
+
+  Parameter cand : Type.
+  Parameter cand_all : list cand.
+  Hypothesis cand_fin : forall c : cand, In c cand_all.
+  Parameter edge : cand -> cand -> nat.
+
+  Inductive Path (k : nat) : cand -> cand -> Prop :=
+  | Unit c d : edge c d >= k -> Path k c d
+  | Cons c d e : edge c d >= k -> Path k d e -> Path k c d.
+
+  Inductive PathT (k : nat) : cand -> cand -> Type :=
+  | UnitT c d : edge c d >= k -> PathT k c d
+  | ConsT c d e : edge c d >= k -> PathT k d e -> PathT k c e.
+
+  Definition wins (c : cand) :=
+    forall d : cand,
+      exists k : nat, ((Path k c d) /\ (forall l : nat, Path l d c -> l <= k)). 
+
+  Fixpoint all_pairs {A : Type} (l : list A) : list (A * A) :=
+    match l with
+    | [] => []
+    | c :: cs =>
+      (c, c) :: (all_pairs cs) ++ (map (fun x => (c, x)) cs) ++ (map (fun x => (x, c)) cs)
+    end.
+  Compute (all_pairs [1;2;3]).
+
+  Hypothesis cand_dec : forall c d : cand, {c = d} + {c <> d}.
+End Evote.
