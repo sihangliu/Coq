@@ -415,3 +415,32 @@ Proof.
   apply n_le_m__Sn_le_Sm. assumption.
 Qed.
 
+Theorem leb_correct : forall n m,
+  n <= m ->
+  Basics.leb n m = true.
+Proof.
+  intros n m H. generalize dependent n.
+  induction m.
+  intros n H. destruct n.
+  reflexivity. inversion H.
+  intros n H. destruct n.
+  reflexivity. simpl. apply IHm.
+  apply Sn_le_Sm__n_le_m. assumption.
+Qed.
+
+Theorem leb_true_trans : forall n m o,
+    Basics.leb n m = true -> Basics.leb m o = true -> Basics.leb n o = true.
+Proof.
+  intros n m o H1 H2. pose proof leb_complete n m H1.
+  pose proof leb_complete m o H2.
+  apply leb_correct.
+  pose proof trans _ _ _ H H0. assumption.
+Qed.
+
+Theorem leb_iff : forall n m,
+  Basics.leb n m = true <-> n <= m.
+Proof.
+  intros n m. split. apply leb_complete.
+  apply leb_correct.
+Qed.
+
