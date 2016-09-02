@@ -253,3 +253,165 @@ Module Evote.
 
   Hypothesis cand_dec : forall c d : cand, {c = d} + {c <> d}.
 End Evote.
+
+Theorem ev_even_iff : forall n,
+    ev n <-> exists k, n = double k.
+Proof.
+  intros n. split.
+  apply ev_even; auto.
+  intros [k Hk]. rewrite Hk. apply ev_double.
+Qed.
+
+Print ev_even_iff.
+
+Theorem ev_sum : forall n m, ev n -> ev m -> ev (n + m).
+Proof.
+  intros n m Hn Hm.
+  induction Hn. assumption.
+  simpl. constructor. assumption.
+Qed.
+
+Inductive ev' : nat -> Prop :=
+| ev'_0 : ev' 0
+| ev'_2 : ev' 2
+| ev'_sum n m : ev' n -> ev' m -> ev' (n + m).
+
+Theorem ev'_ev : forall n, ev' n <-> ev n.
+Proof.
+  intros n. split.
+  intros H. induction H. constructor. repeat constructor.
+  apply ev_sum; assumption.
+  intros. induction H. constructor. apply ev'_sum with (n := 2) (m := n).
+  constructor. assumption.
+Qed.
+
+Theorem ev_ev__ev : forall n m,
+  ev (n+m) -> ev n -> ev m.
+Proof.
+  intros n m H1 H2. induction H2. assumption.
+  apply IHev. simpl in H1. apply evSS_ev in H1.
+  assumption.
+Qed.
+
+Theorem ev_plus_plus : forall n m p,
+  ev (n+m) -> ev (n+p) -> ev (m+p).
+Proof.
+  intros n m p H1 H2.
+  apply ev_sum with (n := n + m) (m := n + p) in H1.
+  replace (n + m + (n + p)) with ((n + n) + (m + p)) in H1.
+  apply ev_ev__ev with (n := n + n) in H1.
+  auto. replace (n + n) with (double n).
+Abort.
+
+Module LeModule.
+
+  Inductive le : nat -> nat -> Prop :=
+  | le_n n : le n n
+  | le_S n m : le n m -> le n (S m).
+
+  Notation "m <= n" := (le m n).
+
+  Theorem test_le1 : 3 <= 3.
+  Proof. apply le_n. Qed.
+  Print test_le1.
+
+  Theorem test_le2: 3 <= 6.
+  Proof. repeat constructor. Qed.
+
+  Print test_le2.
+End LeModule.
+
+Definition lt n m := (le (S n) m).
+
+Notation "m < n" := (lt m n).
+
+Inductive square_of : nat -> nat -> Prop :=
+  sq n : square_of n (n * n).
+
+Theorem test_square : square_of 3 9.
+Proof. repeat constructor. Qed.
+
+Print test_square.
+
+Inductive next_nat : nat -> nat -> Prop :=
+  nn n : next_nat n (S n).
+
+Inductive next_even : nat -> nat -> Prop :=
+| ne_1 n : ev n -> next_even n (S (S n))
+| ne_2 n : ev (S n) -> next_even n (S n).
+
+Inductive total_relation : nat -> nat -> Prop :=
+| tt_1 n m : n <= m -> total_relation n m
+| tt_2 n m : m < n -> total_relation n m.
+
+Inductive empty_relation : nat -> nat -> Prop :=.
+
+Lemma trans : forall m n o,
+    m <= n -> n <= o -> m <= o.
+Proof.
+  induction 2. auto. auto.
+Qed.
+
+Theorem O_le_n : forall n,
+  0 <= n.
+Proof.
+  intros n. induction n; auto.
+Qed.
+
+Theorem n_le_m__Sn_le_Sm : forall n m,
+  n <= m -> S n <= S m.
+Proof.
+  intros n m H. induction H; auto.
+Qed.
+
+Theorem Sn_le_Sm__n_le_m : forall n m,
+  S n <= S m -> n <= m.
+Proof.
+  intros n m H. inversion H.
+  apply le_n. apply trans with (n := S n). auto.
+  auto.
+Qed.
+
+Theorem le_plus_l : forall a b,
+    a <= a + b.
+Proof.
+  intros a b. induction b.
+  rewrite plus_n_O. auto.
+  rewrite <- plus_n_Sm. apply le_S. auto.
+Qed.
+
+Theorem plus_lt : forall n1 n2 m,
+  n1 + n2 < m ->
+  n1 < m /\ n2 < m.
+Proof.
+  intros n1 n2 m H. split.
+  induction H; swap 1 2. 
+  unfold "<". unfold "<" in IHle.
+  apply le_S. auto.
+  unfold "<". apply  n_le_m__Sn_le_Sm.
+  apply le_plus_l.
+
+  induction H.
+  unfold "<". apply n_le_m__Sn_le_Sm. rewrite plus_comm.
+  apply le_plus_l.
+  unfold "<". unfold "<" in IHle.
+  apply le_S. auto.
+Qed.
+
+Theorem lt_S : forall n m,
+  n < m ->
+  n < S m.
+Proof.
+  unfold "<". intros n m H. apply le_S. auto.
+Qed.
+
+Theorem leb_complete : forall n m,
+  Basics.leb n m = true -> n <= m.
+Proof.
+  induction n.
+  intros m H. apply O_le_n.
+  destruct m. intros H. inversion H.
+  intros H. simpl in H. pose proof IHn m H.
+  apply n_le_m__Sn_le_Sm. assumption.
+Qed.
+
