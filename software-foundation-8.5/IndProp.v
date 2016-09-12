@@ -560,7 +560,7 @@ Inductive exp_match {T} : list T -> reg_exp T -> Prop :=
 | MChar x : exp_match [x] (Char x)
 | MApp s1 re1 s2 re2 : exp_match s1 re1 -> exp_match s2 re2 -> exp_match (s1 ++ s2) (App re1 re2)
 | MUnionL s1 re1 re2 : exp_match s1 re1 -> exp_match s1 (Union re1 re2)
-| MuniorR re1 s2 re2 : exp_match s2 re2 -> exp_match s2 (Union re1 re2)
+| MUnionR re1 s2 re2 : exp_match s2 re2 -> exp_match s2 (Union re1 re2)
 | MStar0 re : exp_match [] (Star re)
 | MStarApp s1 s2 re : exp_match s1 re -> exp_match s2 (Star re) -> exp_match (s1 ++ s2) (Star re).
 
@@ -574,4 +574,54 @@ Proof. constructor 3 with (s1 := [1]); constructor. Qed.
 
 Example reg_exp_ex3 : ~ ([1; 2] =~ Char 1).
 Proof. unfold not; intros. inversion H. Qed.
+
+Fixpoint reg_exp_of_list {T} (l : list T) :=
+  match l with
+  | [] => EmptyStr
+  | x :: xs => App (Char x) (reg_exp_of_list xs)
+  end.
+
+Example reg_exp_ex4 : [1; 2; 3] =~ reg_exp_of_list [1; 2; 3].
+Proof.
+  simpl. apply (MApp [1]).
+  apply MChar. apply (MApp [2]). apply MChar.
+  apply (MApp [3]). apply MChar. apply MEmpty.
+Qed.
+
+Lemma MStar1 :
+  forall T s (re : reg_exp T),
+    s =~ re -> s =~ Star re.
+Proof.
+  intros T s re H. rewrite <- (app_nil_r _ s).
+  apply (MStarApp s). auto.
+  apply MStar0.
+Qed.
+
+Lemma empty_is_empty : forall T (s : list T),
+    ~ (s =~ EmptySet).
+Proof.
+  intros T s H. inversion H.
+Qed.
+Print empty_is_empty.
+
+Lemma MUnion' : forall T (s : list T) (re1 re2 : reg_exp T),
+    s =~ re1 \/ s =~ re2 -> s =~ Union re1 re2.
+Proof.
+  intros T s re1 re2 H. destruct H as [H | H].
+  apply MUnionL. auto.
+  apply MUnionR. auto.
+Qed.
+
+Lemma MStar' : forall T (ss : list (list T)) (re : reg_exp T),
+  (forall s, In s ss -> s =~ re) ->
+  fold app ss [] =~ Star re.
+Proof.
+  intros T ss re H.
+  induction ss. simpl. apply MStar0.
+  simpl. apply (MStarApp x). pose proof H x.
+  apply H0. simpl. left. auto.
+  apply IHss. intros s H1. apply H. simpl. right. assumption.
+Qed.
+
+Print MStar'.
 
