@@ -444,3 +444,134 @@ Proof.
   apply leb_correct.
 Qed.
 
+Module R.
+
+  Inductive R : nat -> nat -> nat -> Prop :=
+  | C1 : R 0 0 0
+  | C2 m n o : R m n o -> R (S m) n (S o)
+  | C3 m n o : R m n o -> R m (S n) (S o)
+  | C4 m n o : R (S m) (S n) (S (S o)) -> R m n o
+  | C5 m n o : R m n o -> R n m o.
+
+  Theorem tt1 : R 1 1 2.
+  Proof.
+    repeat constructor.
+    Show Proof.
+  Qed.
+
+End R.
+
+Inductive subseq : list nat -> list nat -> Prop :=
+| Emptycase l : subseq [] l
+| Firstcase x l1 l2 : subseq l1 l2 -> subseq l1 (x :: l2)
+| Seccase x l1 l2 : subseq l1 l2 -> subseq (x :: l1) (x :: l2).
+
+Theorem tsub1 : subseq [1;2;3] [5;6;1;9;9;2;7;3;8].
+Proof.
+  constructor 2. constructor 2. constructor 3.
+  constructor 2. constructor 2. constructor 3. constructor 2.
+  constructor 3. constructor 1.
+Qed.
+
+Theorem subseq_refl : forall l, subseq l l.
+Proof.
+  induction l. constructor 1.
+  constructor 3. assumption.
+Qed.
+
+Print subseq_refl.
+
+Theorem subseq_app : forall l1 l2 l3,
+    subseq l1 l2 -> subseq l1 (l2 ++ l3).
+Proof.
+  intros l1 l2 l3 H.
+  assert (forall (A : Type) (l1 l2 : list A) x, (x :: l1) ++ l2 = x :: (l1 ++ l2)).
+  { intros A l11 l22 x. induction l11. simpl. auto.
+    simpl. auto. }
+  induction H. constructor 1.
+  rewrite H0. constructor 2. auto.
+  rewrite H0. constructor 3. auto.
+Qed.
+
+Theorem subseq_trans : forall l1 l2 l3,
+    subseq l1 l2 -> subseq l2 l3 -> subseq l1 l3.
+Proof.
+  intros l1 l2 l3 H1 H2.
+  generalize dependent H1.
+  generalize dependent l1. induction H2.
+  + intros l1 H. inversion H. constructor 1.
+  + intros l0 H. constructor 2. apply IHsubseq. auto.
+  + intros l0 H. inversion H. constructor 1. constructor 2. apply IHsubseq. auto.
+    constructor 3. auto.
+Qed.
+
+(* The trick here to figure out generalize dependent thing *)
+
+Inductive R : nat -> list nat -> Prop :=
+| C1 : R 0 []
+| C2 n l : R n l -> R (S n) (n :: l)
+| C3 n l : R (S n) l -> R n l.
+
+Theorem rtt1 : R 2 [1; 0].
+Proof. constructor 2. constructor 2. constructor 1. Qed.
+
+Print rtt1.
+
+Theorem rtt2 : R 1 [1;2;1;0].
+Proof. repeat constructor. Qed.
+
+Print rtt2.
+
+Inductive reg_exp (T : Type) : Type :=
+| EmptySet : reg_exp T
+| EmptyStr : reg_exp T
+| Char : T -> reg_exp T
+| App : reg_exp T -> reg_exp T -> reg_exp T
+| Union : reg_exp T -> reg_exp T -> reg_exp T
+| Star : reg_exp T -> reg_exp T.
+
+Arguments EmptySet {T}.
+Arguments EmptyStr {T}.
+Arguments Char {T} _.
+Arguments App {T} _ _.
+Arguments Union {T} _ _.
+Arguments Star {T} _.
+
+Inductive facto : nat -> nat -> Prop :=
+| fact0 : facto 0 1
+| fact1 n m : facto n m -> facto (S n) (S n * m).
+
+Theorem fact11 : facto 5 120.
+Proof.
+  apply fact1 with (n := 4) (m := 24).
+  apply fact1 with (n := 3) (m := 6).
+  apply fact1 with (n := 2) (m := 2).
+  apply fact1 with (n := 1) (m := 1).
+  apply fact1 with (n := 0) (m := 1).
+  apply fact0.
+Qed.
+
+Print fact11.
+
+
+
+Inductive exp_match {T} : list T -> reg_exp T -> Prop :=
+| MEmpty : exp_match [] EmptyStr
+| MChar x : exp_match [x] (Char x)
+| MApp s1 re1 s2 re2 : exp_match s1 re1 -> exp_match s2 re2 -> exp_match (s1 ++ s2) (App re1 re2)
+| MUnionL s1 re1 re2 : exp_match s1 re1 -> exp_match s1 (Union re1 re2)
+| MuniorR re1 s2 re2 : exp_match s2 re2 -> exp_match s2 (Union re1 re2)
+| MStar0 re : exp_match [] (Star re)
+| MStarApp s1 s2 re : exp_match s1 re -> exp_match s2 (Star re) -> exp_match (s1 ++ s2) (Star re).
+
+Notation "s =~ re" := (exp_match s re) (at level 80).
+
+Example reg_exp_ex1 : [1] =~ Char 1.
+Proof. apply MChar. Qed.
+
+Example reg_exp_ex2 : [1; 2] =~ App (Char 1) (Char 2).
+Proof. constructor 3 with (s1 := [1]); constructor. Qed.
+
+Example reg_exp_ex3 : ~ ([1; 2] =~ Char 1).
+Proof. unfold not; intros. inversion H. Qed.
+
