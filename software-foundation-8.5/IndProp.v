@@ -625,3 +625,19 @@ Qed.
 
 Print MStar'.
 
+Lemma reg_exp_of_list_spec : forall T (s1 s2 : list T),
+    s1 =~ reg_exp_of_list s2 <-> s1 = s2.
+Proof.
+  intros T s1 s2. split. generalize dependent s1. generalize dependent s2.
+  induction s2. intros. inversion H. auto.
+  intros s1 H. simpl in H. inversion H.
+  inversion H3. simpl. apply  f_equal.
+  pose proof IHs2 s3. apply IHs2. auto.
+
+  intros H. generalize dependent s2.
+  generalize dependent s1. 
+  induction s1. simpl. intros. rewrite <- H. apply MEmpty.
+  intros s2 H.  rewrite <- H. apply (MApp [x]). apply MChar.
+  apply IHs1. auto.
+Qed.
+
