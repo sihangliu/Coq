@@ -711,3 +711,52 @@ Proof.
 Qed.
 
 
+Lemma star_app : forall (T : Type) (s1 s2 : list T) (re : reg_exp T),
+    s1 =~ Star re -> s2 =~ Star re -> s1 ++ s2 =~ Star re.
+Proof.
+  intros T s1 s2 re H1.
+  induction H1 as
+      [|x' |s1 re1 s2' re2 Hmatch1 IH1 Hmatch2 IH2
+       |s1 re1 re2 Hmatch IH |re1 s2' re2 Hmatch IH
+       |re'' |s1 s2' re'' Hmatch1 IH1 Hmatch2 IH2].
+  simpl. intros. auto.
+Abort.
+
+Lemma star_app : forall (T : Type) (s1 s2 : list T) (re : reg_exp T),
+    s1 =~ Star re -> s2 =~ Star re -> s1 ++ s2 =~ Star re.
+Proof.
+  intros T s1 s2 re H1.
+  remember (Star re) as re'.
+  generalize dependent s2.
+  induction H1 as
+      [|x' |s1 re1 s2' re2 Hmatch1 IH1 Hmatch2 IH2
+       |s1 re1 re2 Hmatch IH |re1 s2' re2 Hmatch IH
+       |re'' |s1 s2' re'' Hmatch1 IH1 Hmatch2 IH2].
+  inversion Heqre'.
+  inversion Heqre'.
+  inversion Heqre'.
+  inversion Heqre'.
+  inversion Heqre'.
+  intros s2 H. simpl. auto.
+  intros s2 H. rewrite <- app_assoc.
+  apply MStarApp. assumption.
+  apply IH2. auto. auto.
+Qed.
+
+Lemma MStar'' : forall (T : Type) (s : list T) (re : reg_exp T),
+    s =~ Star re -> exists ss : list (list T),
+      s = fold app ss [] /\ forall s', In s' ss -> s' =~ re.
+Proof.
+  intros T s re H. remember (Star re) as re'. 
+  induction H as
+      [|x' |s1 re1 s2' re2 Hmatch1 IH1 Hmatch2 IH2
+       |s1 re1 re2 Hmatch IH |re1 s2' re2 Hmatch IH
+       |re'' |s1 s2' re'' Hmatch1 IH1 Hmatch2 IH2].
+  inversion Heqre'.
+  inversion Heqre'.
+  inversion Heqre'.
+  inversion Heqre'.
+  inversion Heqre'. 
+  exists nil. split. auto. intros s' H; inversion H.
+  pose proof IH2 Heqre'. destruct H.
+  exists x. 
