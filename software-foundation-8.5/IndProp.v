@@ -675,14 +675,39 @@ Print in_re_match.
 
 Fixpoint re_not_empty {T : Type} (re : reg_exp T) : bool :=
   match re with
-  | EmptySet | EmptyStr => false
+  | EmptySet => false
+  | EmptyStr => true
   | Char _ => true
-  | App re1 re2 | Union re1 re2 => orb (re_not_empty re1) (re_not_empty re2)
-  | Star re => re_not_empty re
+  | App re1 re2 => andb (re_not_empty re1) (re_not_empty re2)
+  | Union re1 re2 => orb (re_not_empty re1) (re_not_empty re2)
+  | Star re => true (* always match empty string *)
   end.
 
 Lemma re_not_empty_correct : forall T (re : reg_exp T),
   (exists s, s =~ re) <-> re_not_empty re = true.
 Proof.
-  split; intros. 
-  
+  split; intros. generalize dependent re.
+  induction re. intros H. destruct H. inversion H.
+  intros H. destruct H. simpl. auto.
+  intros H. simpl. auto.
+  intros H. simpl. apply andb_true_iff. destruct H.
+  split. apply IHre1. inversion H. exists s1. assumption.
+  apply IHre2. inversion H. exists s2. assumption.
+  intros H. simpl. apply orb_true_iff. destruct H.
+  inversion H. left. apply IHre1. exists x. assumption.
+  right. apply IHre2. exists x. assumption.
+  intros H. auto.
+
+  induction re. inversion H.
+  exists nil. apply MEmpty.
+  exists [t]. apply MChar.
+  inversion H. apply andb_true_iff in H1. destruct H1 as [H1 H2].
+  pose proof IHre1 H1. pose proof IHre2 H2.
+  destruct H0, H3. exists (x ++ x0). apply MApp. assumption. assumption.
+  inversion H. apply orb_true_iff in H1. destruct H1 as [H1 | H1].
+  pose proof IHre1 H1. destruct H0. exists x. apply MUnionL. assumption.
+  pose proof IHre2 H1. destruct H0. exists x. apply MUnionR. assumption.
+  exists nil. apply MStar0.
+Qed.
+
+
