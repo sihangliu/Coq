@@ -18,7 +18,7 @@ Proof.
 Qed.
 
 Theorem evenb_minus2: forall n,
-  evenb n = true -> evenb (pred (pred n)) = true.
+    evenb n = true -> evenb (pred (pred n)) = true.
 Proof.
   intros [ | [ | n']].
   - auto.
@@ -34,7 +34,7 @@ Proof.
 Qed.
 
 Theorem evSS_ev : forall n,
-  ev (S (S n)) -> ev n.
+    ev (S (S n)) -> ev n.
 Proof.
   intros n H. inversion H.
   trivial.
@@ -46,7 +46,7 @@ Proof.
 Qed.
 
 Lemma ev_even : forall n,
-  ev n -> exists k, n = double k.
+    ev n -> exists k, n = double k.
 Proof.
   intros n H. inversion H. exists 0. auto.
   assert (I : (exists k, n0 = double k) -> (exists k, S (S n0) = double k)).
@@ -58,7 +58,7 @@ Proof.
 Abort.
 
 Lemma ev_even : forall n,
-  ev n -> exists k, n = double k.
+    ev n -> exists k, n = double k.
 Proof.
   intros n H. induction H as [|n' H' IH].
   exists 0. auto. destruct IH as [k' Hk'].
@@ -68,7 +68,7 @@ Qed.
 
 Inductive NoDup {X : Type} : list X -> Prop :=
 |basecase : NoDup []
-|nextcase x l : ~ In x l ->  NoDup l -> NoDup (x :: l). 
+|nextcase x l : ~ In x l ->  NoDup l -> NoDup (x :: l).
 
 Lemma nodup_1 : NoDup [0;1;2;4].
 Proof.
@@ -85,7 +85,7 @@ Proof.
 Qed.
 
 
- 
+
 Fixpoint nodup {X : Type} (l : list X) : Prop :=
   match l with
   | nil => True
@@ -158,9 +158,9 @@ Module  Vote.
   Variable n n1 n2 n3 n4 : nat.
 
   Inductive Path : cand -> cand -> nat -> Prop :=
-    | Unit_path a b w : Edge a b w -> Path a b w
-    | Cons_path a b c w v m : Edge a b w -> Path b c v -> m <= w -> m <= v
-                                 -> Path a c m.
+  | Unit_path a b w : Edge a b w -> Path a b w
+  | Cons_path a b c w v m : Edge a b w -> Path b c v -> m <= w -> m <= v
+                            -> Path a c m.
   Check [Edge a b 5; Edge b c 10].
   Definition max (a b : nat) : Prop :=
     a >= b \/ b >= a.
@@ -169,8 +169,8 @@ Module  Vote.
     unfold max.
     right. omega.
   Qed.
-  
-    Lemma path_ea : forall (n1 n2 n3 n4 n m o : nat) (a b c d e : cand),
+
+  Lemma path_ea : forall (n1 n2 n3 n4 n m o : nat) (a b c d e : cand),
       n <= n1 /\ n <= n2 /\ n <= n3 /\ n <= n4 /\ m <= n2 /\ m <= n3 /\ m <= n4
       /\ o <= n3 /\ o <= n4 /\ n <= m /\ m <= o
       -> Edge e d n1 -> Edge d c n2 -> Edge c b n3
@@ -214,7 +214,7 @@ Module  Vote.
     intros n1 d e E.
     constructor 1. assumption.
   Qed.
-  
+
 End Vote.
 
 Module Evote.
@@ -241,7 +241,7 @@ Module Evote.
 
   Definition wins (c : cand) :=
     forall d : cand,
-      exists k : nat, ((Path k c d) /\ (forall l : nat, Path l d c -> l <= k)). 
+    exists k : nat, ((Path k c d) /\ (forall l : nat, Path l d c -> l <= k)).
 
   Fixpoint all_pairs {A : Type} (l : list A) : list (A * A) :=
     match l with
@@ -286,7 +286,7 @@ Proof.
 Qed.
 
 Theorem ev_ev__ev : forall n m,
-  ev (n+m) -> ev n -> ev m.
+    ev (n+m) -> ev n -> ev m.
 Proof.
   intros n m H1 H2. induction H2. assumption.
   apply IHev. simpl in H1. apply evSS_ev in H1.
@@ -294,7 +294,7 @@ Proof.
 Qed.
 
 Theorem ev_plus_plus : forall n m p,
-  ev (n+m) -> ev (n+p) -> ev (m+p).
+    ev (n+m) -> ev (n+p) -> ev (m+p).
 Proof.
   intros n m p H1 H2.
   apply ev_sum with (n := n + m) (m := n + p) in H1.
@@ -353,19 +353,19 @@ Proof.
 Qed.
 
 Theorem O_le_n : forall n,
-  0 <= n.
+    0 <= n.
 Proof.
   intros n. induction n; auto.
 Qed.
 
 Theorem n_le_m__Sn_le_Sm : forall n m,
-  n <= m -> S n <= S m.
+    n <= m -> S n <= S m.
 Proof.
   intros n m H. induction H; auto.
 Qed.
 
 Theorem Sn_le_Sm__n_le_m : forall n m,
-  S n <= S m -> n <= m.
+    S n <= S m -> n <= m.
 Proof.
   intros n m H. inversion H.
   apply le_n. apply trans with (n := S n). auto.
@@ -381,11 +381,11 @@ Proof.
 Qed.
 
 Theorem plus_lt : forall n1 n2 m,
-  n1 + n2 < m ->
-  n1 < m /\ n2 < m.
+    n1 + n2 < m ->
+    n1 < m /\ n2 < m.
 Proof.
   intros n1 n2 m H. split.
-  induction H; swap 1 2. 
+  induction H; swap 1 2.
   unfold "<". unfold "<" in IHle.
   apply le_S. auto.
   unfold "<". apply  n_le_m__Sn_le_Sm.
@@ -399,14 +399,14 @@ Proof.
 Qed.
 
 Theorem lt_S : forall n m,
-  n < m ->
-  n < S m.
+    n < m ->
+    n < S m.
 Proof.
   unfold "<". intros n m H. apply le_S. auto.
 Qed.
 
 Theorem leb_complete : forall n m,
-  Basics.leb n m = true -> n <= m.
+    Basics.leb n m = true -> n <= m.
 Proof.
   induction n.
   intros m H. apply O_le_n.
@@ -416,8 +416,8 @@ Proof.
 Qed.
 
 Theorem leb_correct : forall n m,
-  n <= m ->
-  Basics.leb n m = true.
+    n <= m ->
+    Basics.leb n m = true.
 Proof.
   intros n m H. generalize dependent n.
   induction m.
@@ -438,7 +438,7 @@ Proof.
 Qed.
 
 Theorem leb_iff : forall n m,
-  Basics.leb n m = true <-> n <= m.
+    Basics.leb n m = true <-> n <= m.
 Proof.
   intros n m. split. apply leb_complete.
   apply leb_correct.
@@ -607,7 +607,7 @@ Proof.
   intros T s re H.
   rewrite <- (app_nil_r _ s).
   apply (MStarApp s [] re H (MStar0 re)).
-Qed.  
+Qed.
 
 Lemma empty_is_empty : forall T (s : list T),
     ~ (s =~ EmptySet).
@@ -668,7 +668,7 @@ Theorem in_re_match : forall T (s : list T) (re : reg_exp T) (x : T),
     In x s ->
     In x (re_chars re).
 Proof.
-  
+
   intros T s re x Hmatch Hin.
   (*
 
@@ -685,10 +685,10 @@ Proof.
   intros. inversion Hmatch. simpl. rewrite <- H in Hin. inversion Hin.
   rewrite <- H1 in Hin. rewrite in_app_iff in *.
   destruct Hin. specialize (IHre s1 H0 H3). assumption.
-  simpl. apply IHre with (s := s2). 
-  This proof is stuck with s =~ Star re in context and s =~ re in goal 
+  simpl. apply IHre with (s := s2).
+  This proof is stuck with s =~ Star re in context and s =~ re in goal
   and I don't know if it provable or not. *)
-  
+
   induction Hmatch. inversion Hin.
   simpl. intuition.
   simpl. rewrite in_app_iff in *. destruct Hin.
@@ -713,7 +713,7 @@ Fixpoint re_not_empty {T : Type} (re : reg_exp T) : bool :=
   end.
 
 Lemma re_not_empty_correct : forall T (re : reg_exp T),
-  (exists s, s =~ re) <-> re_not_empty re = true.
+    (exists s, s =~ re) <-> re_not_empty re = true.
 Proof.
   split; intros. generalize dependent re.
   induction re. intros H. destruct H. inversion H.
@@ -770,5 +770,26 @@ Proof.
   intros s2 H. apply H.
   intros s2 H1. rewrite <- app_assoc.
   apply MStarApp. assumption. apply IH2; assumption.
+Qed.
+
+Lemma MStar'' : forall T (s : list T) (re : reg_exp T),
+    s =~ Star re ->
+    exists ss : list (list T),
+      s = fold app ss []
+      /\ forall s', In s' ss -> s' =~ re.
+Proof.
+  intros T s re H. remember (Star re) as re'. induction H.
+  inversion Heqre'.
+  inversion Heqre'.
+  inversion Heqre'.
+  inversion Heqre'.
+  inversion Heqre'.
+  inversion Heqre'. exists []. simpl. intuition.
+  inversion Heqre'; subst re0.
+  specialize (IHexp_match2 Heqre'). destruct IHexp_match2 as [ss IHx]. 
+  destruct IHx. exists (s1 :: ss). split.
+  simpl. rewrite H1. reflexivity.
+  intros s' Hin. simpl in Hin. destruct Hin. congruence.
+  apply H2. assumption.
 Qed.
 
