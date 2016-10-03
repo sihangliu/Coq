@@ -522,20 +522,6 @@ Proof. repeat constructor. Qed.
 
 Print rtt2.
 
-Inductive reg_exp (T : Type) : Type :=
-| EmptySet : reg_exp T
-| EmptyStr : reg_exp T
-| Char : T -> reg_exp T
-| App : reg_exp T -> reg_exp T -> reg_exp T
-| Union : reg_exp T -> reg_exp T -> reg_exp T
-| Star : reg_exp T -> reg_exp T.
-
-Arguments EmptySet {T}.
-Arguments EmptyStr {T}.
-Arguments Char {T} _.
-Arguments App {T} _ _.
-Arguments Union {T} _ _.
-Arguments Star {T} _.
 
 Inductive facto : nat -> nat -> Prop :=
 | fact0 : facto 0 1
@@ -553,12 +539,26 @@ Qed.
 
 Print fact11.
 
+Inductive reg_exp (T : Type) : Type :=
+| EmptySet : reg_exp T
+| EmptyStr : reg_exp T
+| Char : T -> reg_exp T
+| App : reg_exp T -> reg_exp T -> reg_exp T
+| Union : reg_exp T -> reg_exp T -> reg_exp T
+| Star : reg_exp T -> reg_exp T.
 
+Arguments EmptySet {T}.
+Arguments EmptyStr {T}.
+Arguments Char {T} _.
+Arguments App {T} _ _.
+Arguments Union {T} _ _.
+Arguments Star {T} _.
 
 Inductive exp_match {T} : list T -> reg_exp T -> Prop :=
 | MEmpty : exp_match [] EmptyStr
 | MChar x : exp_match [x] (Char x)
-| MApp s1 re1 s2 re2 : exp_match s1 re1 -> exp_match s2 re2 -> exp_match (s1 ++ s2) (App re1 re2)
+| MApp s1 re1 s2 re2 :
+    exp_match s1 re1 -> exp_match s2 re2 -> exp_match (s1 ++ s2) (App re1 re2)
 | MUnionL s1 re1 re2 : exp_match s1 re1 -> exp_match s1 (Union re1 re2)
 | MUnionR re1 s2 re2 : exp_match s2 re2 -> exp_match s2 (Union re1 re2)
 | MStar0 re : exp_match [] (Star re)
@@ -566,61 +566,75 @@ Inductive exp_match {T} : list T -> reg_exp T -> Prop :=
 
 Notation "s =~ re" := (exp_match s re) (at level 80).
 
-Example reg_exp_ex1 : [1] =~ Char 1.
-Proof. apply MChar. Qed.
+Example reg_exp_ex1 : [1] =~ (Char 1).
+Proof.
+  apply (MChar 1).
+Qed.
 
-Example reg_exp_ex2 : [1; 2] =~ App (Char 1) (Char 2).
-Proof. constructor 3 with (s1 := [1]); constructor. Qed.
+Print reg_exp_ex1.
 
-Example reg_exp_ex3 : ~ ([1; 2] =~ Char 1).
-Proof. unfold not; intros. inversion H. Qed.
+Example reg_exp_ex2 : [1;2] =~ App (Char 1) (Char 2).
+Proof.
+  apply (MApp _ _ _ _  (MChar 1) (MChar 2)).
+Qed.
 
-Fixpoint reg_exp_of_list {T} (l : list T) :=
+Print reg_exp_ex2.
+
+Example reg_exp_ex3 : ~([1;2] =~ (Char 1)).
+Proof.
+  intros H. inversion H.
+Qed.
+
+Fixpoint reg_exp_of_list {T} (l : list T) : reg_exp T :=
   match l with
   | [] => EmptyStr
-  | x :: xs => App (Char x) (reg_exp_of_list xs)
+  | x :: l' => App (Char x) (reg_exp_of_list l')
   end.
 
 Example reg_exp_ex4 : [1; 2; 3] =~ reg_exp_of_list [1; 2; 3].
 Proof.
-  simpl. apply (MApp [1]).
-  apply MChar. apply (MApp [2]). apply MChar.
-  apply (MApp [3]). apply MChar. apply MEmpty.
+  simpl.
+  apply (MApp [1] (Char 1) [2;3] (App (Char 2) (App (Char 3) EmptyStr)) (MChar 1)
+              (MApp [2] (Char 2) [3] (App (Char 3) EmptyStr) (MChar 2)
+                    (MApp [3] (Char 3) [] EmptyStr (MChar 3) MEmpty))).
 Qed.
 
-Lemma MStar1 :
-  forall T s (re : reg_exp T),
-    s =~ re -> s =~ Star re.
+Print reg_exp_ex4.
+
+Lemma MStar1 : forall T s (re : reg_exp T),
+    s =~ re -> s =~ (Star re).
 Proof.
-  intros T s re H. rewrite <- (app_nil_r _ s).
-  apply (MStarApp s). auto.
-  apply MStar0.
-Qed.
+  intros T s re H.
+  rewrite <- (app_nil_r _ s).
+  apply (MStarApp s [] re H (MStar0 re)).
+Qed.  
 
 Lemma empty_is_empty : forall T (s : list T),
     ~ (s =~ EmptySet).
 Proof.
   intros T s H. inversion H.
 Qed.
+
 Print empty_is_empty.
 
+
 Lemma MUnion' : forall T (s : list T) (re1 re2 : reg_exp T),
-    s =~ re1 \/ s =~ re2 -> s =~ Union re1 re2.
+    s =~ re1 \/ s =~ re2 ->
+    s =~ Union re1 re2.
 Proof.
   intros T s re1 re2 H. destruct H as [H | H].
-  apply MUnionL. auto.
-  apply MUnionR. auto.
+  apply (MUnionL s re1 re2 H).
+  apply (MUnionR re1 s re2 H).
 Qed.
 
 Lemma MStar' : forall T (ss : list (list T)) (re : reg_exp T),
-  (forall s, In s ss -> s =~ re) ->
-  fold app ss [] =~ Star re.
+    (forall s, In s ss -> s =~ re) ->
+    fold app ss [] =~ Star re.
 Proof.
-  intros T ss re H.
-  induction ss. simpl. apply MStar0.
-  simpl. apply (MStarApp x). pose proof H x.
-  apply H0. simpl. left. auto.
-  apply IHss. intros s H1. apply H. simpl. right. assumption.
+  intros T ss re H. induction ss.
+  apply MStar0.
+  simpl. apply MStarApp. specialize (H x). apply H. simpl. intuition.
+  apply IHss. intros s Hin. apply H. simpl. intuition.
 Qed.
 
 Print MStar'.
@@ -628,50 +642,65 @@ Print MStar'.
 Lemma reg_exp_of_list_spec : forall T (s1 s2 : list T),
     s1 =~ reg_exp_of_list s2 <-> s1 = s2.
 Proof.
-  intros T s1 s2. split. generalize dependent s1. generalize dependent s2.
-  induction s2. intros. inversion H. auto.
-  intros s1 H. simpl in H. inversion H.
-  inversion H3. simpl. apply  f_equal.
-  pose proof IHs2 s3. apply IHs2. auto.
-
-  intros H. generalize dependent s2.
-  generalize dependent s1. 
-  induction s1. simpl. intros. rewrite <- H. apply MEmpty.
-  intros s2 H.  rewrite <- H. apply (MApp [x]). apply MChar.
-  apply IHs1. auto.
+  intros T s1 s2. split. generalize  dependent s1.
+  induction s2. intros s1 H. simpl in H. inversion H. auto.
+  intros s1 H. inversion H. inversion H3. apply f_equal.
+  apply IHs2. assumption.
+  generalize dependent s1.
+  induction s2. intros s1 H.  rewrite H. apply MEmpty.
+  intros s1 H. simpl. rewrite H. apply (MApp [x] (Char x)).
+  apply MChar. apply IHs2. auto.
 Qed.
 
-Fixpoint re_chars {T : Type} (re : reg_exp T) : list T :=
+
+Fixpoint re_chars {T} (re : reg_exp T) : list T :=
   match re with
   | EmptySet => []
   | EmptyStr => []
   | Char x => [x]
-  | App re1 re2 | Union re1 re2 => re_chars re1 ++ re_chars re2
+  | App re1 re2 => re_chars re1 ++ re_chars re2
+  | Union re1 re2 => re_chars re1 ++ re_chars re2
   | Star re => re_chars re
   end.
 
 Theorem in_re_match : forall T (s : list T) (re : reg_exp T) (x : T),
-    s =~ re -> In x s -> In x (re_chars re).
+    s =~ re ->
+    In x s ->
+    In x (re_chars re).
 Proof.
+  
   intros T s re x Hmatch Hin.
-  induction Hmatch as
-      [ |x'
-        |s1 re1 s2 re2 Hmatch1 IH1 Hmatch2 IH2
-        |s1 re1 re2 Hmatch IH |re1 s2 re2 Hmatch IH
-        |re |s1 s2 re Hmatch1 IH1 Hmatch2 IH2].
-  apply Hin.
-  apply Hin.
-  simpl. rewrite in_app_iff in *.
-  destruct Hin as [Hin | Hin]. left. apply IH1. assumption.
-  right. apply IH2. assumption.
-  simpl. rewrite in_app_iff in *. left. apply IH. assumption.
-  simpl. rewrite in_app_iff. right. apply IH. assumption.
-  inversion Hin.
-  simpl. rewrite in_app_iff in *. destruct Hin as [Hin | Hin].
-  apply IH1. assumption. apply IH2. assumption.
-Qed.
+  (*
 
-Print in_re_match.
+  generalize dependent s. induction re. intros. inversion Hmatch.
+  intros. inversion Hmatch. rewrite <- H in Hin. inversion Hin.
+  intros. simpl. left. inversion Hmatch. rewrite <- H in Hin. simpl in Hin. destruct Hin.
+  congruence. inversion H0. intros. inversion Hmatch. rewrite <- H1 in *.
+  simpl. rewrite in_app_iff in *. destruct Hin.
+  specialize (IHre1 s1 H2 H4). left. assumption.
+  specialize (IHre2 s2 H3 H4). right. assumption.
+  intros. simpl. inversion Hmatch. rewrite in_app_iff in *.
+  specialize (IHre1 s H1 Hin). left. assumption.
+  rewrite in_app_iff in *. specialize (IHre2 s H1 Hin). right. assumption.
+  intros. inversion Hmatch. simpl. rewrite <- H in Hin. inversion Hin.
+  rewrite <- H1 in Hin. rewrite in_app_iff in *.
+  destruct Hin. specialize (IHre s1 H0 H3). assumption.
+  simpl. apply IHre with (s := s2). 
+  This proof is stuck with s =~ Star re in context and s =~ re in goal 
+  and I don't know if it provable or not. *)
+  
+  induction Hmatch. inversion Hin.
+  simpl. intuition.
+  simpl. rewrite in_app_iff in *. destruct Hin.
+  left. apply IHHmatch1. assumption.
+  right. apply IHHmatch2. assumption.
+  simpl. apply in_app_iff. left.  apply IHHmatch. assumption.
+  simpl. apply in_app_iff. right. apply IHHmatch. assumption.
+  simpl. inversion Hin.
+  rewrite in_app_iff in *. destruct Hin.
+  simpl. apply IHHmatch1. assumption.
+  apply IHHmatch2. assumption.
+Qed.
 
 Fixpoint re_not_empty {T : Type} (re : reg_exp T) : bool :=
   match re with
@@ -710,53 +739,36 @@ Proof.
   exists nil. apply MStar0.
 Qed.
 
-
-Lemma star_app : forall (T : Type) (s1 s2 : list T) (re : reg_exp T),
-    s1 =~ Star re -> s2 =~ Star re -> s1 ++ s2 =~ Star re.
+Lemma star_app: forall T (s1 s2 : list T) (re : reg_exp T),
+    s1 =~ Star re ->
+    s2 =~ Star re ->
+    s1 ++ s2 =~ Star re.
 Proof.
   intros T s1 s2 re H1.
-  induction H1 as
-      [|x' |s1 re1 s2' re2 Hmatch1 IH1 Hmatch2 IH2
-       |s1 re1 re2 Hmatch IH |re1 s2' re2 Hmatch IH
-       |re'' |s1 s2' re'' Hmatch1 IH1 Hmatch2 IH2].
-  simpl. intros. auto.
+  induction H1 as [|x'|s1 re1 s2' re2 Hmatch1 IH1 Hmatch2 IH2
+                   |s1 re1 re2 Hmatch IH|re1 s2' re2 Hmatch IH
+                   |re''|s1 s2' re'' Hmatch1 IH1 Hmatch2 IH2].
+  simpl. intros H. apply H.
 Abort.
 
-Lemma star_app : forall (T : Type) (s1 s2 : list T) (re : reg_exp T),
-    s1 =~ Star re -> s2 =~ Star re -> s1 ++ s2 =~ Star re.
+
+Lemma star_app: forall T (s1 s2 : list T) (re : reg_exp T),
+    s1 =~ Star re ->
+    s2 =~ Star re ->
+    s1 ++ s2 =~ Star re.
 Proof.
   intros T s1 s2 re H1.
   remember (Star re) as re'.
   generalize dependent s2.
   induction H1 as
-      [|x' |s1 re1 s2' re2 Hmatch1 IH1 Hmatch2 IH2
-       |s1 re1 re2 Hmatch IH |re1 s2' re2 Hmatch IH
-       |re'' |s1 s2' re'' Hmatch1 IH1 Hmatch2 IH2].
-  inversion Heqre'.
-  inversion Heqre'.
-  inversion Heqre'.
-  inversion Heqre'.
-  inversion Heqre'.
-  intros s2 H. simpl. auto.
-  intros s2 H. rewrite <- app_assoc.
-  apply MStarApp. assumption.
-  apply IH2. auto. auto.
+      [|x'|s1 re1 s2' re2 Hmatch1 IH1 Hmatch2 IH2
+       |s1 re1 re2 Hmatch IH|re1 s2' re2 Hmatch IH
+       |re''|s1 s2' re'' Hmatch1 IH1 Hmatch2 IH2].
+  inversion Heqre'. inversion Heqre'.
+  inversion Heqre'. inversion Heqre'.
+  inversion Heqre'. inversion Heqre'.
+  intros s2 H. apply H.
+  intros s2 H1. rewrite <- app_assoc.
+  apply MStarApp. assumption. apply IH2; assumption.
 Qed.
 
-Lemma MStar'' : forall (T : Type) (s : list T) (re : reg_exp T),
-    s =~ Star re -> exists ss : list (list T),
-      s = fold app ss [] /\ forall s', In s' ss -> s' =~ re.
-Proof.
-  intros T s re H. remember (Star re) as re'. 
-  induction H as
-      [|x' |s1 re1 s2' re2 Hmatch1 IH1 Hmatch2 IH2
-       |s1 re1 re2 Hmatch IH |re1 s2' re2 Hmatch IH
-       |re'' |s1 s2' re'' Hmatch1 IH1 Hmatch2 IH2].
-  inversion Heqre'.
-  inversion Heqre'.
-  inversion Heqre'.
-  inversion Heqre'.
-  inversion Heqre'. 
-  exists nil. split. auto. intros s' H; inversion H.
-  pose proof IH2 Heqre'. destruct H.
-  exists x. 
