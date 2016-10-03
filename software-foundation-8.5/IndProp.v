@@ -785,11 +785,11 @@ Proof.
   inversion Heqre'.
   inversion Heqre'.
   inversion Heqre'. exists []. simpl. intuition.
-  inversion Heqre'; subst re0.
   specialize (IHexp_match2 Heqre'). destruct IHexp_match2 as [ss IHx]. 
   destruct IHx. exists (s1 :: ss). split.
   simpl. rewrite H1. reflexivity.
   intros s' Hin. simpl in Hin. destruct Hin. congruence.
   apply H2. assumption.
 Qed.
+
 
