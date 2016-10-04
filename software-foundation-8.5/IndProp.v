@@ -793,3 +793,73 @@ Proof.
 Qed.
 
 
+Theorem filter_not_empty_In : forall n l,
+    filter (Basics.beq_nat n) l <> [] ->
+    In n l.
+Proof.
+  intros n l. induction l as [|m l' IHl].
+  intros H. simpl in H; unfold not in H. apply H. reflexivity.
+  simpl. destruct (Basics.beq_nat n m) eqn:H.
+  intros _. rewrite beq_nat_true_iff in H. left. auto.
+  intros H'. specialize (IHl H'). right. auto.
+Qed.
+
+Inductive reflect (P : Prop) : bool -> Prop :=
+| ReflectT : P -> reflect P true
+| ReflectF : ~P -> reflect P false.
+
+Theorem iff_reflect : forall P b, (P <-> b = true) -> reflect P b.
+Proof.
+  intros P [] H.
+  apply ReflectT. apply H. auto.
+  apply ReflectF. rewrite H. intros H'. inversion H'.
+Qed.
+
+Theorem reflect_iff : forall P b, reflect P b -> (P <-> b = true).
+Proof.
+  intros P [] H. split. intros. reflexivity.
+  intros. inversion H. assumption.
+  split. inversion H. intros. congruence.
+  intros. inversion H0.
+Qed.
+
+Lemma beq_natP : forall n m, reflect (n = m) (Basics.beq_nat n m).
+Proof.
+  intros n m. apply iff_reflect. rewrite beq_nat_true_iff.
+  reflexivity.
+Qed.
+
+Theorem filter_not_empty_In' : forall n l,
+    filter (Basics.beq_nat n) l <> [] ->
+    In n l.
+Proof.
+  intros n l. induction l as [|m l' IHl].
+  simpl. unfold not. intros. apply H. reflexivity.
+  simpl. destruct (beq_natP n m) as [H | H].
+  intros _. left. auto.
+  intros H'. right. apply IHl. assumption.
+Qed.
+
+Inductive pal {X : Type} : list X ->  Prop :=
+| Emptyl : pal []
+| Onel x : pal [x]
+| Multi x l : pal l -> pal (x :: l ++ [x]).
+
+Theorem pal_app_rev : forall (X : Type) (l : list X) , pal  (l ++ rev l).
+Proof.
+  intros X l. induction l. apply Emptyl. simpl.
+  replace (x :: l ++ rev l ++ [x]) with (x :: (l ++ rev l) ++ [x]).
+  apply Multi. assumption. apply f_equal.
+  rewrite app_assoc. reflexivity.
+Qed.
+
+(* 
+ To do ∀l, l = rev l → pal l. 
+ The idea is to devise customized induction 
+ base_case : P []
+ singleton_case : forall x , P [x]
+ step_case : forall (x : X) (l : list X), P l -> l = rev l -> P (x :: l ++ [x])
+ l ++ [x] can also be written as snoc l x. Use this induction to solve the problem 
+
+ *)
+
