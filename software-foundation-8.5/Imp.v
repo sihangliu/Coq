@@ -108,3 +108,42 @@ Module AExp.
       try (simpl; simpl in IHa1; rewrite IHa1; rewrite IHa2; reflexivity).
     destruct n; simpl; rewrite <- IHa2; reflexivity.
   Qed.
+
+  Theorem In10 : In 10 [1;2;3;4;5;6;7;8;9;10].
+  Proof.
+    repeat (try (left; reflexivity); right).
+  Qed.
+
+  Theorem In10' : In 10 [1;2;3;4;5;6;7;8;9;10].
+  Proof.
+    repeat (left; reflexivity).
+    repeat (right; try (left; reflexivity)).
+  Qed.
+
+
+  Fixpoint optimize_0plus_b (b : bexp) : bexp :=
+    match b with
+    | BTrue => BTrue
+    | BFalse => BFalse
+    | BEq b1 b2 => BEq (optimize_0plus b1) (optimize_0plus b2)
+    | BLe b1 b2 => BLe (optimize_0plus b1) (optimize_0plus b2)
+    | BNot b1 => BNot (optimize_0plus_b b1)
+    | BAnd b1 b2 => BAnd (optimize_0plus_b b1) (optimize_0plus_b b2)
+    end.
+
+  
+  Theorem optimize_0plus_b_sound : forall b,
+      beval (optimize_0plus_b b) = beval b.
+  Proof.
+    assert (Ht : forall a1, aeval (optimize_0plus a1) = aeval a1)
+      by apply optimize_0plus_sound. repeat (rewrite Ht).
+    intros b. induction b.
+    - reflexivity.
+    - reflexivity.
+    - simpl. repeat (rewrite Ht). reflexivity.
+    - simpl. repeat (rewrite Ht). reflexivity.
+    - simpl. rewrite IHb. reflexivity.
+    - simpl. rewrite IHb1. rewrite IHb2. reflexivity.
+  Qed.
+
+  
