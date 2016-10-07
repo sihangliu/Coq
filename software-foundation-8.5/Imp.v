@@ -136,7 +136,7 @@ Module AExp.
       beval (optimize_0plus_b b) = beval b.
   Proof.
     assert (Ht : forall a1, aeval (optimize_0plus a1) = aeval a1)
-      by apply optimize_0plus_sound. repeat (rewrite Ht).
+      by apply optimize_0plus_sound.
     intros b. induction b.
     - reflexivity.
     - reflexivity.
@@ -144,6 +144,76 @@ Module AExp.
     - simpl. repeat (rewrite Ht). reflexivity.
     - simpl. rewrite IHb. reflexivity.
     - simpl. rewrite IHb1. rewrite IHb2. reflexivity.
+  Qed.
+
+  
+  Example silly_presburger_example : forall m n o p,
+      m + n <= n + o /\ o + 3 = p + 3 ->
+      m <= p.
+  Proof.
+    intros. omega.
+  Qed.
+
+  Module aevalR_first_try.
+
+    Inductive aevalR : aexp -> nat -> Prop :=
+    | E_ANum n : aevalR (ANum n) n
+    | E_APlus e1 e2 n1 n2 : aevalR e1 n1 -> aevalR e2 n2 -> aevalR (APlus e1 e2) (n1 + n2)
+    | E_AMinus e1 e2 n1 n2 : aevalR e1 n1 -> aevalR e2 n2 -> aevalR (AMinus e1 e2) (n1 - n2)
+    | E_AMult e1 e2 n1 n2 : aevalR e1 n1 -> aevalR e2 n2 -> aevalR (AMult e1 e2) (n1 * n2).
+
+    Notation "e '\\' n" := (aevalR e n) (at level 50, left associativity)
+                           : type_scope.
+  End aevalR_first_try.
+
+  Reserved Notation "e '\\' n" (at level 50, left associativity).
+
+  Inductive aevalR : aexp -> nat -> Prop :=
+  | E_ANum n : (ANum n) \\ n
+  | E_APlus e1 e2 n1 n2 : (e1 \\ n1) -> (e2 \\ n2) -> (APlus e1 e2) \\ (n1 + n2)
+  | E_AMinus e1 e2 n1 n2 : (e1 \\ n1) -> (e2 \\ n2) -> (AMinus e1 e2) \\ (n1 - n2)
+  | E_AMult e1 e2 n1 n2 : (e1 \\ n1) -> (e2 \\ n2) -> (AMult e1 e2) \\ (n1 * n2)
+  where "e '\\' n" := (aevalR e n) : type_scope.
+
+  Theorem aeval_iff_aevalR : forall a n, (a \\ n) <-> aeval a = n.
+  Proof.
+    intros a n. split. intros H.
+    induction H; auto; simpl; rewrite IHaevalR1; rewrite IHaevalR2; auto.
+    generalize dependent n.
+    induction a; simpl; intros; subst; constructor; try apply IHa1; try apply IHa2; auto.
+  Qed.
+
+  Inductive bevalR : bexp -> bool -> Prop :=
+  | E_BTrue : bevalR BTrue true
+  | E_BFalse : bevalR BFalse false
+  | E_BEq e1 e2 n1 n2 : (e1 \\ n1) -> (e2 \\ n2) -> bevalR (BEq e1 e2) (beq_nat n1 n2)
+  | E_BLe e1 e2 n1 n2 : (e1 \\ n1) -> (e2 \\ n2) -> bevalR (BLe e1 e2) (leb n1 n2)
+  | E_BNot e b : bevalR e b -> bevalR (BNot e) (negb b)
+  | E_BAnd e1 e2 b1 b2 : bevalR e1 b1 -> bevalR e2 b2 -> bevalR (BAnd e1 e2) (andb b1 b2).
+
+  Theorem beval_iff_bevalR : forall a n, (bevalR a n) <-> beval a = n.
+  Proof.
+    intros a n. split. intros H.
+    induction H. auto. auto.
+    simpl. specialize (aeval_iff_aevalR e1 n1); intros. destruct H1.
+    specialize (aeval_iff_aevalR e2 n2); intros. destruct H3.
+    pose proof H1 H. pose proof H3 H0. auto.
+    simpl. specialize (aeval_iff_aevalR e1 n1); intros. destruct H1.
+    specialize (aeval_iff_aevalR e2 n2); intros. destruct H3.
+    pose proof H1 H. pose proof H3 H0. auto.
+    simpl. rewrite IHbevalR. auto.
+    simpl. rewrite IHbevalR1, IHbevalR2. auto.
+
+    generalize dependent n.
+    induction a; simpl; intros; subst.
+    apply E_BTrue. apply E_BFalse.
+    apply E_BEq. apply aeval_iff_aevalR. reflexivity.
+    apply aeval_iff_aevalR. reflexivity.
+    constructor. apply aeval_iff_aevalR. reflexivity.
+    apply aeval_iff_aevalR. reflexivity.
+    constructor. apply IHa. reflexivity.
+    constructor. apply IHa1. reflexivity.
+    apply IHa2. reflexivity.
   Qed.
 
   
