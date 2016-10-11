@@ -428,3 +428,28 @@ Qed.
 
 Print ceval_example2.
 
+Definition pup_to_n : com :=
+  Y ::= ANum 0;;
+    WHILE BLe (ANum 1) (AId X) DO
+    Y ::= APlus (AId X) (AId Y);;
+    X ::= AMinus (AId X) (ANum 1) END.
+  
+Theorem pup_to_2_ceval :
+  pup_to_n / (t_update empty_state X 2) \\
+           t_update (t_update (t_update (t_update (t_update (t_update empty_state
+                                                                      X 2) Y 0) Y 2) X 1) Y 3) X 0.
+Proof.
+  apply E_Seq with (t_update (t_update empty_state X 2) Y 0).
+  apply E_Ass. auto.
+  apply E_WhileLoop with (t_update (t_update (t_update (t_update empty_state
+                                                                 X 2) Y 0) Y 2) X 1). auto.
+  apply E_Seq with (t_update (t_update (t_update empty_state X 2) Y 0) Y 2).
+  apply E_Ass. auto.
+  apply E_Ass. auto.
+  apply E_WhileLoop with (t_update (t_update (t_update (t_update (t_update (t_update empty_state X 2) Y 0) Y 2) X 1) Y 3) X 0). auto.
+  apply E_Seq with (t_update (t_update (t_update (t_update (t_update empty_state X 2) Y 0) Y 2) X 1) Y 3).
+  apply E_Ass. auto.
+  apply E_Ass. auto.
+  apply E_WhileEnd. auto.
+Qed.
+
