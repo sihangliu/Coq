@@ -547,32 +547,35 @@ Inductive sinstr : Type :=
 | SMinus : sinstr
 | SMult : sinstr.
 
-Print total_map.
-Check tl .
-Check pair.
-Definition pop (l : list nat) : nat * list nat :=
-  (hd 0 l, tl l).
 
+Definition s_eval (st : state) (stack : list nat) (inst : sinstr) : list nat :=
+  match inst with
+  | SPush x => x :: stack
+  | SLoad id => st id :: stack
+  | SPlus =>
+    match stack with
+    | f :: s :: rest => s + f :: rest
+    | _ => []
+    end
+  | SMinus =>
+    match stack with
+    | f :: s :: rest => s - f :: rest
+    | _ => []
+    end
+  | SMult =>
+    match stack with
+    | f :: s :: rest => s * f :: rest
+    | _ => []
+    end
+  end.
+
+
+    
 Fixpoint s_execute (st : state) (stack : list nat) (prog : list sinstr) : list nat :=
   match prog with
   | nil => stack
   | h :: t =>
-    match h with
-    | SPush n => s_execute st (n :: stack) t
-    | SLoad id => s_execute st (st id :: stack) t
-    | SPlus =>
-      let (f, rest) := pop stack in
-      let (s, rest') := pop rest in
-      s_execute st ((f + s) :: rest') t
-    | SMinus =>
-      let (f, rest) := pop stack in
-      let (s, rest') := pop rest in
-      s_execute st ((s - f) :: rest') t
-    | SMult =>
-      let (f, rest) := pop stack in
-      let (s, rest') := pop rest in
-      s_execute st ((f * s) :: rest') t
-    end
+    s_execute st (s_eval st stack h) t
   end.
 
 Example s_execute1 :
@@ -591,3 +594,38 @@ Example s_execute2 :
   = [15; 4].
 Proof. compute. auto. Qed.
 
+Print aexp.
+
+                   
+Fixpoint s_compile (e : aexp) : list sinstr :=
+  match e with
+  | ANum n => [SPush n]
+  | AId id => [SLoad id]
+  | APlus e1 e2 =>
+    s_compile e1 ++ s_compile e2 ++ [SPlus]
+  | AMinus e1 e2 =>
+    s_compile e1 ++ s_compile e2 ++ [SMinus]
+  | AMult e1 e2 =>
+    s_compile e1 ++ s_compile e2 ++ [SMult]
+  end.
+
+Example s_compile1 :
+  s_compile (AMinus (AId X) (AMult (ANum 2) (AId Y)))
+  = [SLoad X; SPush 2; SLoad Y; SMult; SMinus].
+Proof. reflexivity. Qed.
+
+Theorem s_concat_program :
+  forall (st : state) (prog1 prog2 : list sinstr) (l : list nat),
+    s_execute st l (prog1 ++ prog2) = s_execute st (s_execute st l prog1)  prog2.
+Proof.
+  intros st. induction prog1.
+  auto.
+  simpl. intros.
+  destruct (s_eval st l a); apply IHprog1.
+Qed.
+
+Theorem s_compile_correct : forall (st : state) (e : aexp),
+  s_execute st [] (s_compile e) = [ aeval st e ].
+Proof.
+  intros st e. induction e.
+  auto. auto. simpl. 
