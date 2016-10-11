@@ -453,3 +453,51 @@ Proof.
   apply E_WhileEnd. auto.
 Qed.
 
+Theorem ceval_deterministic: forall c st st1 st2,
+    c / st \\ st1 ->
+    c / st \\ st2 ->
+    st1 = st2.
+Proof.
+  intros c st st1 st2 E1 E2.
+  generalize dependent st2.
+  induction E1; intros st2 E2; inversion E2; subst.
+  - (* Skip *) reflexivity.
+  - (* E_Ass *) reflexivity.
+  - (* E_Seq *) assert (EQ1 : st' = st'0).
+                { apply IHE1_1; assumption. }
+                subst st'0.
+                apply IHE1_2. assumption.
+  - apply IHE1. assumption.
+  - congruence.
+  - congruence.
+  - apply IHE1. assumption.
+  - auto.
+  - congruence.
+  - congruence.
+  - assert (EQ1 : st' = st'0).
+    { apply IHE1_1. assumption. }
+    subst st'0.
+    apply IHE1_2. assumption.
+Qed.
+
+Theorem plus2_spec : forall st n st',
+    st X = n ->
+    plus2 / st \\ st' -> st' X = n + 2.
+Proof.
+  intros st n st' Hx Heval.
+  inversion Heval. subst. clear Heval. simpl.
+  apply t_update_eq.
+Qed.
+
+Theorem loop_never_stops : forall st st',
+    ~(loop / st \\ st').
+Proof.
+  intros st st' H. unfold loop in H.
+  remember (WHILE BTrue DO SKIP END) as loopdef eqn:Heqloopdef.
+  induction H. congruence.
+  congruence. congruence. congruence.
+  congruence. inversion Heqloopdef.
+  subst. inversion H.
+  congruence.
+Qed.
+
