@@ -501,3 +501,40 @@ Proof.
   congruence.
 Qed.
 
+Fixpoint no_whiles (c : com) : bool :=
+  match c with
+  | SKIP => true
+  | _ ::= _ => true
+  | c1;; c2 =>
+    andb (no_whiles c1) (no_whiles c2)
+  | IFB _ THEN c1 ELSE c2 FI =>
+    andb (no_whiles c1) (no_whiles c2)
+  | WHILE _ DO _ END => false
+  end.
+
+Print com.
+Inductive no_whilesR : com -> Prop :=
+| RSkip : no_whilesR SKIP
+| RAss x y : no_whilesR (x ::= y)
+| RSeq x y : no_whilesR x -> no_whilesR y -> no_whilesR (x ;; y)
+| RIf b x y : no_whilesR x -> no_whilesR y -> no_whilesR (IFB b THEN x ELSE y FI).
+
+Theorem no_whiles_eqv:
+   forall c, no_whiles c = true <-> no_whilesR c.
+Proof.
+  intros c. split. intros H.
+  induction c. apply RSkip. apply RAss.
+  simpl in H. apply andb_true_iff in H. destruct H.
+  apply RSeq. apply IHc1. assumption. apply IHc2. assumption.
+  simpl in H. apply andb_true_iff in H. destruct H.
+  apply RIf. apply IHc1. assumption. apply IHc2. assumption.
+  inversion H.
+
+  intros H. induction c; simpl; auto.
+  inversion H. apply andb_true_iff. split.
+  apply IHc1. assumption. apply IHc2. assumption.
+  inversion H. apply andb_true_iff. split.
+  apply IHc1. assumption. apply IHc2. assumption.
+  inversion H.
+Qed.
+
