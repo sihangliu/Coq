@@ -538,3 +538,56 @@ Proof.
   inversion H.
 Qed.
 
+Print aexp.
+
+Inductive sinstr : Type :=
+| SPush : nat -> sinstr
+| SLoad : id -> sinstr
+| SPlus : sinstr
+| SMinus : sinstr
+| SMult : sinstr.
+
+Print total_map.
+Check tl .
+Check pair.
+Definition pop (l : list nat) : nat * list nat :=
+  (hd 0 l, tl l).
+
+Fixpoint s_execute (st : state) (stack : list nat) (prog : list sinstr) : list nat :=
+  match prog with
+  | nil => stack
+  | h :: t =>
+    match h with
+    | SPush n => s_execute st (n :: stack) t
+    | SLoad id => s_execute st (st id :: stack) t
+    | SPlus =>
+      let (f, rest) := pop stack in
+      let (s, rest') := pop rest in
+      s_execute st ((f + s) :: rest') t
+    | SMinus =>
+      let (f, rest) := pop stack in
+      let (s, rest') := pop rest in
+      s_execute st ((s - f) :: rest') t
+    | SMult =>
+      let (f, rest) := pop stack in
+      let (s, rest') := pop rest in
+      s_execute st ((f * s) :: rest') t
+    end
+  end.
+
+Example s_execute1 :
+     s_execute empty_state []
+       [SPush 5; SPush 3; SPush 1; SMinus]
+     = [2; 5].
+Proof.
+  reflexivity.
+Qed.
+
+Print s_execute.
+
+Example s_execute2 :
+  s_execute (t_update empty_state X 3) [3;4]
+            [SPush 4; SLoad X; SMult; SPlus]
+  = [15; 4].
+Proof. compute. auto. Qed.
+
