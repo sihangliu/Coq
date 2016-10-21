@@ -627,16 +627,10 @@ Qed.
 Theorem s_compile_correct : forall (st : state) (e : aexp) (l : list nat),
   s_execute st l (s_compile e) = [ aeval st e ] ++ l.
 Proof.  
-  intros st. induction e.
-  auto. auto. simpl.
-  intros l.
-  try (repeat (rewrite s_concat_program)).
-  rewrite IHe1, IHe2. auto.
-  intros l. simpl.
-  try (repeat (rewrite s_concat_program)).
-  rewrite IHe1, IHe2. auto.
-  intros l. simpl.
-  try (repeat (rewrite s_concat_program)).
-  rewrite IHe1, IHe2. auto.
+  intros st. induction e;
+  auto; simpl;
+  intros l;
+  try (repeat (rewrite s_concat_program));
+  rewrite IHe1, IHe2; auto.
 Qed.
 
