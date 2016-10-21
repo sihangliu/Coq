@@ -634,3 +634,88 @@ Proof.
   rewrite IHe1, IHe2; auto.
 Qed.
 
+Module BreakImp.
+
+  Inductive com : Type :=
+  | CSkip : com
+  | CBreak : com
+  | CAss : id -> aexp -> com
+  | CSeq : com -> com -> com
+  | CIf : bexp -> com -> com -> com
+  | CWhile : bexp -> com -> com.
+
+  Notation "'SKIP'" := CSkip.
+  Notation "'BREAK'" := CBreak.
+  Notation "x '::=' a" := (CAss x a) (at level 60).
+  Notation "c1 ;; c2" := (CSeq c1 c2) (at level 80, right associativity).
+  Notation "'WHILE' b 'DO' c 'END'" :=
+    (CWhile b c) (at level 80, right associativity).
+  Notation "'IFB' c1 'THEN' c2 'ELSE' c3 'FI'" :=
+    (CIf c1 c2 c3) (at level 80, right associativity).
+
+  
+  Inductive status : Type :=
+  | SContinue : status
+  | SBreak : status.
+
+  Reserved Notation "c1 '/' st '\\' s '/' st'"
+           (at level 40, st, s at level 39).
+
+  
+  Inductive ceval : com -> state -> status -> state -> Prop :=
+  | E_Skip st : CSkip / st \\ SContinue / st
+  | E_Break st : CBreak / st \\ SBreak / st
+  | E_Ass st a1 n x : aeval st a1 = n -> (x ::= a1) / st \\ SContinue / (t_update st x n)
+  | E_IfTrue st st' b c1 c2 s :
+      beval st b = true -> c1 / st \\ s / st' ->
+      (IFB b THEN c1 ELSE c2 FI) / st \\ s / st'
+  | E_IfFalse st st' b c1 c2 s :
+      beval st b = false -> c2 / st \\ s / st' ->
+      (IFB b THEN c1 ELSE c2 FI) / st \\ s / st'
+  | E_SeqBreak c1 c2 st st' :
+      c1 / st \\ SBreak / st' ->
+      (c1 ;; c2) / st \\ SBreak / st'
+  | E_Seq c1 c2 st st' st'' s:
+      c1 / st \\ SContinue / st' -> c2 / st' \\ s / st'' ->
+      (c1 ;; c2) / st \\ s / st''
+  | E_WhileEnd st b c:
+      beval st b = false ->
+      (WHILE b DO c END) / st \\ SContinue / st
+  | E_WhileLoopNormal st st' st'' b c s :
+      beval st b = true ->
+      c / st \\ SContinue / st' ->
+      (WHILE b DO c END) / st' \\ s / st'' ->
+      (WHILE b DO c END) / st \\ SContinue / st''
+  | E_WhileBreak st st' b c:
+      beval st b = true ->
+      c / st \\ SBreak / st' ->
+      (WHILE b DO c END) / st \\ SContinue / st'
+  where "c1 '/' st '\\' s '/' st'" := (ceval c1 st s st').
+
+  Theorem break_ignore : forall c st st' s,
+     (BREAK;; c) / st \\ s / st' ->
+     st = st'.
+  Proof.
+    intros c st st' s H.
+    inversion H.
+    inversion H5. auto. subst. inversion H2.
+  Qed.
+
+  
+  Theorem while_continue : forall b c st st' s,
+      (WHILE b DO c END) / st \\ s / st' ->
+      s = SContinue.
+  Proof.
+    intros b c st st' s H. inversion H; auto.
+  Qed.
+
+  Theorem while_stops_on_break : forall b c st st',
+      beval st b = true ->
+      c / st \\ SBreak / st' ->
+      (WHILE b DO c END) / st \\ SContinue / st'.
+  Proof.
+    intros b c st st' H1 H2.
+    specialize (E_WhileBreak _ _ _ _ H1 H2); auto.
+  Qed.
+
+  
