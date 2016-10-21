@@ -612,7 +612,7 @@ Fixpoint s_compile (e : aexp) : list sinstr :=
 Example s_compile1 :
   s_compile (AMinus (AId X) (AMult (ANum 2) (AId Y)))
   = [SLoad X; SPush 2; SLoad Y; SMult; SMinus].
-Proof. reflexivity. Qed.
+Proof. compute. reflexivity. Qed.
 
 Theorem s_concat_program :
   forall (st : state) (prog1 prog2 : list sinstr) (l : list nat),
@@ -624,8 +624,19 @@ Proof.
   destruct (s_eval st l a); apply IHprog1.
 Qed.
 
-Theorem s_compile_correct : forall (st : state) (e : aexp),
-  s_execute st [] (s_compile e) = [ aeval st e ].
-Proof.
-  intros st e. induction e.
-  auto. auto. simpl. 
+Theorem s_compile_correct : forall (st : state) (e : aexp) (l : list nat),
+  s_execute st l (s_compile e) = [ aeval st e ] ++ l.
+Proof.  
+  intros st. induction e.
+  auto. auto. simpl.
+  intros l.
+  try (repeat (rewrite s_concat_program)).
+  rewrite IHe1, IHe2. auto.
+  intros l. simpl.
+  try (repeat (rewrite s_concat_program)).
+  rewrite IHe1, IHe2. auto.
+  intros l. simpl.
+  try (repeat (rewrite s_concat_program)).
+  rewrite IHe1, IHe2. auto.
+Qed.
+
