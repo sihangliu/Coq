@@ -718,13 +718,16 @@ Module BreakImp.
     specialize (E_WhileBreak _ _ _ _ H1 H2); auto.
   Qed.
 
-  
+ 
   Theorem while_break_true : forall b c st st',
       (WHILE b DO c END) / st \\ SContinue / st' ->
       beval st' b = true ->
       exists st'', c / st'' \\ SBreak / st'.
   Proof.
-    intros. remember (WHILE b DO c END) as Hloop.
+    intros.
+    remember (WHILE b DO c END) as Hloop.
     induction H; try (inversion HeqHloop); subst.
     congruence. apply IHceval2. auto. auto.
-    apply IHceval. 
+    exists st. auto.
+  Qed.
+  
