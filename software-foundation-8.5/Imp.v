@@ -740,25 +740,23 @@ Module BreakImp.
       st1 = st2 /\ s1 = s2.
   Proof.
     induction c. intros st st1 st2 s1 s2 H1 H2.
-    inversion H1. inversion H2. intuition. rewrite <- H4.
-    rewrite H7. auto.
-    intros. inversion H; inversion H0.
-    rewrite <- H4. rewrite H7. intuition.
-    intros. inversion H; inversion H0. intuition.
-    intros. inversion H; inversion H0.
-    specialize (IHc1 _ _ _ _ _ H6 H12). assumption.
-    specialize (IHc1 _ _ _ _ _ H6 H9 ). destruct IHc1. inversion H15.
-    specialize (IHc1 _ _ _ _ _ H3 H13). destruct IHc1. inversion H15.
-    specialize (IHc1 _ _ _ _ _ H3 H10). destruct IHc1. subst.
-    specialize (IHc2 _ _ _ _ _ H7 H14). auto.
-    intros. inversion H; inversion H0.
-    specialize (IHc1 _ _ _ _ _ H8 H16). assumption.
+    inv H1; inv H2. intuition.
+    intros. inv H; inv H0. intuition.
+    intros. inv H; inv H0. intuition.
+    intros. inv H; inv  H0.
+    specialize (IHc1 _ _ _ _ _ H6 H5). assumption.
+    specialize (IHc1 _ _ _ _ _ H6 H2 ). destruct IHc1. inv  H0.
+    specialize (IHc1 _ _ _ _ _ H3 H6). destruct IHc1. inversion H0.
+    specialize (IHc1 _ _ _ _ _ H3 H2). destruct IHc1. subst.
+    specialize (IHc2 _ _ _ _ _ H7 H8). auto.
+    intros. inv H; inv H0.
+    specialize (IHc1 _ _ _ _ _ H8 H9). assumption.
     congruence. congruence.
-    specialize (IHc2 _ _ _ _ _ H8 H16). assumption.
+    specialize (IHc2 _ _ _ _ _ H8 H9). assumption.
     intros. inv H; inv H0. auto.
     congruence. congruence. congruence.
     intuition. pose proof (IHc _ _ _ _ _ H4 H5).
-    destruct H. 
+     
     
     specialize (IHc _ _ _ _ _ H4 H9). destruct IHc. inversion H0.
     congruence. specialize (IHc _ _ _ _ _ H7 H4).
