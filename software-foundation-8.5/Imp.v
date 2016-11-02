@@ -730,4 +730,38 @@ Module BreakImp.
     congruence. apply IHceval2. auto. auto.
     exists st. auto.
   Qed.
+
+  Ltac inv H := inversion H; subst; clear H.
+
   
+  Theorem ceval_deterministic: forall (c:com) st st1 st2 s1 s2,
+      c / st \\ s1 / st1 ->
+      c / st \\ s2 / st2 ->
+      st1 = st2 /\ s1 = s2.
+  Proof.
+    induction c. intros st st1 st2 s1 s2 H1 H2.
+    inversion H1. inversion H2. intuition. rewrite <- H4.
+    rewrite H7. auto.
+    intros. inversion H; inversion H0.
+    rewrite <- H4. rewrite H7. intuition.
+    intros. inversion H; inversion H0. intuition.
+    intros. inversion H; inversion H0.
+    specialize (IHc1 _ _ _ _ _ H6 H12). assumption.
+    specialize (IHc1 _ _ _ _ _ H6 H9 ). destruct IHc1. inversion H15.
+    specialize (IHc1 _ _ _ _ _ H3 H13). destruct IHc1. inversion H15.
+    specialize (IHc1 _ _ _ _ _ H3 H10). destruct IHc1. subst.
+    specialize (IHc2 _ _ _ _ _ H7 H14). auto.
+    intros. inversion H; inversion H0.
+    specialize (IHc1 _ _ _ _ _ H8 H16). assumption.
+    congruence. congruence.
+    specialize (IHc2 _ _ _ _ _ H8 H16). assumption.
+    intros. inv H; inv H0. auto.
+    congruence. congruence. congruence.
+    intuition. pose proof (IHc _ _ _ _ _ H4 H5).
+    destruct H. 
+    
+    specialize (IHc _ _ _ _ _ H4 H9). destruct IHc. inversion H0.
+    congruence. specialize (IHc _ _ _ _ _ H7 H4).
+    destruct IHc. inversion H0.
+    specialize (IHc _ _ _ _ _ H7 H8). firstorder.
+    
