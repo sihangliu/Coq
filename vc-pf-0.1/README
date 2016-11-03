@@ -1,0 +1,25 @@
+Dependencies
+------------
+
+- Coq (http://coq.inria.fr), tested with version 8.4 pl 5
+- GHC (https://www.haskell.org/ghc/), tested with version 7.6.3
+
+Platforms
+---------
+
+Tested using Ubuntu 14.04 using stock ghc and coq packages and under
+MacOS 10.10 using stock ghc and coq installations.
+
+Running
+-------
+
+If you have GNU make or similar, just run make. This creates the
+executables "FPTPWrapper" and "STVWrapper". Run "make test" to test
+both on randomly generated data. See the last section of the Haskell
+source files of the wrappers on how to use both interactively from
+within ghc.
+
+Bugs
+----
+
+Write to dirk.pattinson@anu.edu.au.
