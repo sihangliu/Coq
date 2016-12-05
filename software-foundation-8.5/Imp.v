@@ -733,8 +733,49 @@ Module BreakImp.
 
   Ltac inv H := inversion H; subst; clear H.
 
-  
-  Theorem ceval_deterministic: forall (c:com) st st1 st2 s1 s2,
+
+  Theorem ceval_deterministic: forall c st st1 st2 s1 s2,
+     c / st \\ s1 / st1  ->
+     c / st \\ s2 / st2 ->
+     st1 = st2 /\ s1 = s2.
+  Proof.
+    (* Tactics that find two contradictory statements of the shape
+     c / st || s1 / st1 and c / st || s2 / st2 and try to use determinism and
+     congruence to solve the goal. *)
+    Ltac elim_determ :=
+      match goal with
+      | H1 : forall _ _ _ _ _, _ / _ \\ _ / _ -> _ / _ \\ _ / _ -> _ = _ /\ _ = _,
+      H2 : _ / _ \\ _ / _, H3 : _ / _ \\ _ / _ |- _ =>
+    specialize H1 with (1 := H2) (2 := H3); destruct H1; congruence
+    end.
+  (* Induction on the command, we eliminate as many goals as possible by using
+     congruence after the inversion of the two eval statements, and try to eliminate
+     easy contradictions with elim_determ. *)
+  induction c; split; try solve [inversion H; inversion H0; try congruence; subst;
+  try elim_determ].
+  (* We are left with a few cases regarding sequences because you need to make a
+     deduction before you can easily finish the proof, and the case for WHILE. *)
+  - inversion H; inversion H0; try congruence; subst; try elim_determ.
+    specialize IHc1 with (1 := H3) (2 := H10). destruct IHc1; subst.
+    eapply IHc2; eauto.
+  - inversion H; inversion H0; try congruence; subst; try elim_determ.
+    specialize IHc1 with (1 := H3) (2 := H10). destruct IHc1; subst.
+    eapply IHc2; eauto.
+  - pose proof (while_continue _ _ _ _ _ H);
+    pose proof (while_continue _ _ _ _ _ H0); subst.
+    (* We need some kind of induction, because we don't know how many E_WhileLoopNormal
+       steps were taken. *)
+    remember (WHILE b DO c END) as t in *;
+    induction H; inversion Heqt; subst; inversion H0; subst; try congruence;
+    try elim_determ.
+    specialize IHc with (1 := H1) (2 := H6); destruct IHc; subst.
+      apply IHceval2; auto.
+      rewrite (while_continue _ _ _ _ _ H2).
+      rewrite <- (while_continue _ _ _ _ _ H8).
+      assumption.
+  Qed.
+         
+  Theorem ceval_deterministic1: forall (c:com) st st1 st2 s1 s2,
       c / st \\ s1 / st1 ->
       c / st \\ s2 / st2 ->
       st1 = st2 /\ s1 = s2.
@@ -746,7 +787,7 @@ Module BreakImp.
     intros. inv H; inv  H0.
     specialize (IHc1 _ _ _ _ _ H6 H5). assumption.
     specialize (IHc1 _ _ _ _ _ H6 H2 ). destruct IHc1. inv  H0.
-    specialize (IHc1 _ _ _ _ _ H3 H6). destruct IHc1. inversion H0.
+    specialize (IHc1 _ _ _ _ _ H3 H6). destruct IHc1. inv H0.
     specialize (IHc1 _ _ _ _ _ H3 H2). destruct IHc1. subst.
     specialize (IHc2 _ _ _ _ _ H7 H8). auto.
     intros. inv H; inv H0.
@@ -756,10 +797,21 @@ Module BreakImp.
     intros. inv H; inv H0. auto.
     congruence. congruence. congruence.
     intuition. pose proof (IHc _ _ _ _ _ H4 H5).
+    destruct H; subst.
+    pose proof (while_continue _ _ _ _ _ H10).
+    pose proof (while_continue _ _ _ _ _ H8); subst.
+    
+    
+    remember (WHILE b DO c END) as t in *.
+    induction H10; inversion Heqt; subst;  inversion H8; subst; try congruence;
+      try elim_determ.
+    specialize IHc with (1 := H5) (2 := _); destruct IHc; subst.
+    
+    
      
     
     specialize (IHc _ _ _ _ _ H4 H9). destruct IHc. inversion H0.
     congruence. specialize (IHc _ _ _ _ _ H7 H4).
     destruct IHc. inversion H0.
     specialize (IHc _ _ _ _ _ H7 H8). firstorder.
-    
+   
