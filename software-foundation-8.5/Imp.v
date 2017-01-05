@@ -818,4 +818,4 @@ Module BreakImp.
     specialize (IHc _ _ _ _ _ H7 H8). firstorder.
   Qed.
   
-  
+End BreakImp.
