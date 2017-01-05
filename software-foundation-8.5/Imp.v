@@ -797,21 +797,25 @@ Module BreakImp.
     intros. inv H; inv H0. auto.
     congruence. congruence. congruence.
     intuition. pose proof (IHc _ _ _ _ _ H4 H5).
-    destruct H; subst.
+    destruct H; subst. clear H3; clear H0; clear H5.
     pose proof (while_continue _ _ _ _ _ H10).
     pose proof (while_continue _ _ _ _ _ H8); subst.
-    
-    
-    remember (WHILE b DO c END) as t in *.
-    induction H10; inversion Heqt; subst;  inversion H8; subst; try congruence;
-      try elim_determ.
-    specialize IHc with (1 := H5) (2 := _); destruct IHc; subst.
-    
-    
+
+    (* I have no idea about this part :) *)
+    clear H2. clear H4.
+    remember (WHILE b DO c END) as t in *;
+    induction H8; inversion Heqt; subst; inversion H10; subst; try congruence;
+    try elim_determ.
+    specialize IHc with (1 := H3) (2 := H8_); destruct IHc; subst.
+    apply IHceval2; auto.
+    rewrite (while_continue _ _ _ _ _  H8_0).
+    rewrite <- (while_continue _ _ _ _ _ H5). assumption.    
      
     
     specialize (IHc _ _ _ _ _ H4 H9). destruct IHc. inversion H0.
     congruence. specialize (IHc _ _ _ _ _ H7 H4).
     destruct IHc. inversion H0.
     specialize (IHc _ _ _ _ _ H7 H8). firstorder.
-   
+  Qed.
+  
+  
