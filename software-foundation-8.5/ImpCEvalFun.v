@@ -185,3 +185,28 @@ Proof.
      c is not general enough to apply induction hypothesis *)
 Abort.
 
+Theorem ceval_step_more : forall i1 i2 st st' c,
+    i1 <= i2 ->
+    ceval_step st c i1 = Some st' ->
+    ceval_step st c i2 = Some st'.
+Proof.
+  induction i1; intros i2 st st' c H1 H2.
+  inversion H2. destruct i2.
+  inversion H1. assert (Ht : i1 <= i2) by omega.
+  destruct c. simpl in *. assumption.
+  simpl in *. assumption.
+  simpl in *. destruct (ceval_step st c1 i1) eqn:Heqr.
+  apply (IHi1 i2) in Heqr; try assumption.
+  rewrite Heqr. apply (IHi1 i2) in H2; try assumption.
+  inversion H2.
+  simpl in *. destruct (beval st b) eqn:Heqr.
+  apply IHi1. assumption.
+  assumption. apply IHi1. assumption. assumption.
+  simpl in *. destruct (beval st b); try assumption.
+  destruct (ceval_step st c i1) eqn:Heqn.
+  apply (IHi1 i2) in Heqn; try assumption.
+  rewrite Heqn.
+  apply (IHi1 i2) in H2. assumption.
+  assumption. inversion H2.
+Qed.
+
