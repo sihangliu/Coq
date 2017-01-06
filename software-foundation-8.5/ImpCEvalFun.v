@@ -159,5 +159,29 @@ Proof.
   inversion H1.
   inversion H1.
   apply E_WhileEnd. subst. auto.
+  Show Proof.
 Qed.
+
+
+Theorem ceval_step_ceval1 : forall c st st',
+    (exists i, ceval_step st c i = Some st') ->
+    c / st \\ st'.
+Proof.
+  induction c; intros st st' [n E]; inversion E; subst; clear E; destruct n; inversion H0; subst.
+  apply E_Skip.
+  apply E_Ass. auto.
+  destruct (ceval_step st c1 n) eqn:Ht.
+  apply E_Seq with s.
+  apply IHc1. exists n. auto. apply IHc2. exists n. auto.
+  inversion H1.
+  destruct (beval st b) eqn:Ht.
+  apply E_IfTrue. auto. apply IHc1. exists n. auto.
+  apply E_IfFalse. auto. apply IHc2. exists n. auto.
+  destruct (beval st b) eqn: Heqr.
+  destruct (ceval_step st c n) eqn:Heqr1.
+  apply E_WhileLoop with s. auto.
+  apply IHc. exists n. auto.
+  (* upto this point everything is good but now goal is impossible to prove because
+     c is not general enough to apply induction hypothesis *)
+Abort.
 
