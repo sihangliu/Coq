@@ -210,3 +210,33 @@ Proof.
   assumption. inversion H2.
 Qed.
 
+Theorem ceval__ceval_step: forall c st st',
+    c / st \\ st' ->
+    exists i, ceval_step st c i = Some st'.
+Proof.
+  intros c st st' Hce.
+  induction Hce. exists 1. auto.
+  exists 1. simpl. rewrite H. auto.
+  destruct IHHce1. destruct IHHce2.
+  exists (1 + x + x0). simpl.
+  destruct (ceval_step st c1 (x + x0)) eqn:Ht.
+  apply ceval_step_more with (i2 := x + x0) in H.
+  rewrite H in Ht. inversion Ht. subst.
+  apply ceval_step_more with (i1 := x0). omega.
+  assumption. omega.
+  apply ceval_step_more with (i2 := x + x0) in H.
+  rewrite Ht in H. inversion H. omega.
+  destruct IHHce. exists (1 + x). simpl. rewrite H. auto.
+  destruct IHHce. exists (1 + x). simpl. rewrite H. auto.
+  exists 1. simpl. rewrite H. auto.
+  destruct IHHce1. destruct IHHce2.
+  exists (1 + x + x0). simpl. rewrite H.
+  destruct (ceval_step st c (x + x0)) eqn:Ht.
+  apply ceval_step_more with (i2 := x + x0) in H0.
+  rewrite H0 in Ht. inversion Ht. subst.
+  apply ceval_step_more with (i1 := x0). omega. assumption.
+  omega.
+  apply ceval_step_more with (i2 := (x + x0)) in H0.
+  rewrite H0 in Ht. inversion Ht. omega.
+Qed.
+
