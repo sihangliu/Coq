@@ -240,3 +240,28 @@ Proof.
   rewrite H0 in Ht. inversion Ht. omega.
 Qed.
 
+Theorem ceval_and_ceval_step_coincide: forall c st st',
+    c / st \\ st'
+    <-> exists i, ceval_step st c i = Some st'.
+Proof.
+  intros c st st'. split.
+  apply ceval__ceval_step.
+  apply ceval_step_ceval.
+Qed.
+
+Theorem ceval_deterministic' : forall c st st1 st2,
+    c / st \\ st1 ->
+    c / st \\ st2 ->
+    st1 = st2.
+Proof.
+  intros c st st1 st2 He1 He2.
+  apply ceval__ceval_step in He1.
+  apply ceval__ceval_step in He2.
+  destruct He1 as [i1 E1].
+  destruct He2 as [i2 E2].
+  apply ceval_step_more with (i2 := i1 + i2) in E1.
+  apply ceval_step_more with (i2 := i1 + i2) in E2.
+  rewrite E1 in E2. inversion E2. reflexivity. omega.
+  omega.
+Qed.
+
