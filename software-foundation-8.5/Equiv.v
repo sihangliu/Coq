@@ -154,3 +154,50 @@ Proof.
   auto.
 Qed.
 
+Theorem WHILE_false : forall b c,
+    bequiv b BFalse ->
+    cequiv
+      (WHILE b DO c END)
+      SKIP.
+Proof.
+  unfold bequiv, cequiv. split; intros.
+  simpl in H. inversion H0; subst. apply E_Skip.
+  specialize (H st). rewrite H in H3. inversion H3.
+  simpl in H. inversion H0; subst. apply E_WhileEnd.
+  specialize (H st'). assumption.
+Qed.
+
+Lemma WHILE_true_nonterm : forall b c st st',
+    bequiv b BTrue ->
+    ~( (WHILE b DO c END) / st \\ st' ).
+Proof.
+  intros b c st st' Hb.
+  intros H.
+  remember (WHILE b DO c END) as cw eqn:Heqcw.
+  induction H; inversion Heqcw; subst; clear Heqcw.
+  unfold bequiv in Hb. specialize (Hb st).
+  rewrite Hb in H. simpl in H. inversion H.
+  apply IHceval2. auto.
+Qed.
+
+
+Program Fixpoint tmp (a b : nat) := a + b.
+
+
+
+Theorem WHILE_true: forall b c,
+    bequiv b BTrue ->
+    cequiv
+      (WHILE b DO c END)
+      (WHILE BTrue DO SKIP END).
+Proof.
+  unfold cequiv. split; intros.
+  remember (WHILE b DO c END) as cw eqn:Hcw.
+  induction H0; inversion Hcw; subst; clear Hcw.
+  specialize (H st). rewrite H0 in H. inversion H.
+  specialize (WHILE_true_nonterm b c st' st'' H); intros.
+  contradiction.
+
+  apply WHILE_true_nonterm in H0. inversion H0.
+  unfold bequiv. auto.
+Qed.
