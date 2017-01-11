@@ -201,3 +201,19 @@ Proof.
   apply WHILE_true_nonterm in H0. inversion H0.
   unfold bequiv. auto.
 Qed.
+
+Theorem loop_unrolling: forall b c,
+    cequiv
+      (WHILE b DO c END)
+      (IFB b THEN (c;; WHILE b DO c END) ELSE SKIP FI).
+Proof.
+  unfold cequiv. split. intros H.
+  remember (WHILE b DO c END) as cw.
+  induction H; inversion Heqcw; subst; clear Heqcw.
+  apply E_IfFalse. auto. apply E_Skip.
+  specialize (IHceval2 eq_refl).
+  apply E_IfTrue. auto. apply E_Seq with st'.
+  auto. auto.
+
+  
+  
