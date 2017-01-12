@@ -253,3 +253,22 @@ Proof.
   + simpl. rewrite t_update_same. auto.
 Qed.
 
+Theorem assign_aequiv : forall X e,
+    aequiv (AId X) e ->
+    cequiv SKIP (X ::= e).
+Proof.
+  split; intros.
+  assert (st' = t_update st' X (aeval st' e)).
+  apply functional_extensionality. intros.
+  unfold aequiv in H. specialize (H st'). rewrite <- H.
+  rewrite t_update_same. auto. rewrite H1 at 1.
+  inversion H0. apply E_Ass. auto.
+
+  assert (st = t_update st X (aeval st e)).
+  apply functional_extensionality. intros.
+  unfold aequiv in H. specialize (H st).
+  rewrite <- H. rewrite t_update_same. auto.
+  inversion H0. rewrite H6 in H1. rewrite <- H1.
+  apply  E_Skip.
+Qed.
+
