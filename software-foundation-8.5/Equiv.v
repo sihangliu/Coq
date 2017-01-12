@@ -222,3 +222,18 @@ Proof.
   inversion H6; subst.
   apply E_WhileEnd. assumption.
 Qed.
+
+Theorem seq_assoc : forall c1 c2 c3,
+  cequiv ((c1;;c2);;c3) (c1;;(c2;;c3)).
+Proof.
+  unfold cequiv. split; intros.
+  inversion H; inversion H2; subst.
+  apply E_Seq with st'1. assumption.
+  apply E_Seq with st'0. assumption.
+  assumption.
+
+  inversion H; inversion H5; subst.
+  repeat (eapply E_Seq). apply H2.
+  apply H8. assumption.
+Qed.
+
