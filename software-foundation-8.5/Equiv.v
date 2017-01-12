@@ -237,3 +237,19 @@ Proof.
   apply H8. assumption.
 Qed.
 
+Theorem identity_assignment : forall (X:id),
+    cequiv
+      (X ::= AId X)
+      SKIP.
+Proof.
+  intros. split; intros H.
+  inversion H; subst. simpl in *.
+  replace (t_update st X (st X)) with st.
+  constructor.
+  apply functional_extensionality. intros.
+  rewrite t_update_same. auto.
+  replace st' with (t_update st' X (aeval st' (AId X))).
+  + inversion H. subst. apply E_Ass. auto.
+  + simpl. rewrite t_update_same. auto.
+Qed.
+
