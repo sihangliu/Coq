@@ -207,7 +207,7 @@ Theorem loop_unrolling: forall b c,
       (WHILE b DO c END)
       (IFB b THEN (c;; WHILE b DO c END) ELSE SKIP FI).
 Proof.
-  unfold cequiv. split. intros H.
+  unfold cequiv. split; intros H.
   remember (WHILE b DO c END) as cw.
   induction H; inversion Heqcw; subst; clear Heqcw.
   apply E_IfFalse. auto. apply E_Skip.
@@ -215,5 +215,10 @@ Proof.
   apply E_IfTrue. auto. apply E_Seq with st'.
   auto. auto.
 
-  
-  
+  inversion H; subst.
+  inversion H6; subst. 
+  apply E_WhileLoop with st'0. assumption.
+  assumption. assumption.
+  inversion H6; subst.
+  apply E_WhileEnd. assumption.
+Qed.
