@@ -1,0 +1,52 @@
+#!/bin/sh
+
+# CoLoR, a Coq library on rewriting and termination.
+# See the COPYRIGHTS and LICENSE files.
+#
+# - Frederic Blanqui, 2007-04-17
+
+prog=`basename $0`
+
+usage () {
+  echo "usage: $prog [-h]"
+}
+
+help () {
+  cat <<EOF
+Provides the number of lines for the various kinds of formalizations.
+
+Options:
+-h Provide this help and exit
+EOF
+}
+
+case "$1" in
+-h) usage; echo; help; exit 0;;
+esac
+
+if test $# -ne 0; then usage; exit 1; fi
+
+lines () {
+  wc -l /dev/null `find $dir -path ./Coccinelle -prune -o -name \*.v -print` | grep total | sed 's|total||'
+}
+
+dir=.; total=`lines`
+dir=Util; data=`lines`
+dir=Term; term=`lines`
+dir='Util/Logic Util/Relation Util/Algebra'; math=`lines`
+
+data=`expr $data - $math`
+
+termin=`expr $total - $data - $term - $math`
+
+display () {
+  mean=`expr 1000 \* $val / $total | sed 's|\(.*\)\([0-9]\)$|\1.\2|'`
+#  mean=`expr 100 \* $val / $total`
+  echo $dir $val $mean%
+}
+
+dir=Data; val=$data; display
+dir=Term; val=$term; display
+dir=Math; val=$math; display
+dir=Termin; val=$termin; display
+dir=Total; val=$total; display

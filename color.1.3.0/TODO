@@ -1,0 +1,105 @@
+
+- move VecEq into VecOrd
+
+- replace LexOrder by Lexico?
+
+- define a feq generalizing the ones in ListUtil and FSetUtil
+
+- in RelUtil, replace # by * and ! by +
+
+- replace Add [Parametric] Morphism by Proper
+
+- remove Implicit in Implicit Arguments
+
+- define default_mi
+
+- factorize the part of the proof that is similar in
+   AFilterPerm.filter_cont_closed and
+   AFilterPerm.red_incl_filter_red_rc.
+
+- in BoundNat, replace bnat by nat_lt
+
+- replace decidability lemmas by boolean functions
+  in polynomial and matrix interpretations
+
+- for polynomial monotony, check that, all coefficients are
+  non-negative and that, for all i, there is a monomial [k_1,..,k_n]
+  which coefficient is positive and such that k_i is positive too
+
+- semantic labelling with booleans
+
+- FC2
+
+- usable rules
+
+- precedence termination? (special case of RPO)
+
+- unify Arctic and Arctic-Below-Zero methods
+
+- factorize AMatrixInt and ABigMatrixInt?
+
+- define hd_red_mod from hd_red_Mod
+
+- only defined symbols need to be marked
+
+- replace plus by tail recursive plus
+
+- make problem statement (including signature) explicit at every proof step?
+
+- replace defs and lemmas when they are added in coq std lib
+
+- replace unary integers by binary integers (big nats)?
+
+Done:
+-----
+
+- in AFilterPerm, prove that (map (@val (arity f)) (pi f) = raw_pi f)
+  and define permut on raw_pi instead of pi.
+
+- extend filter to red in case of permutations only
+
+- remove MPO top level hypotheses -> make a functor
+
+- extend Term/WithArity/AInfSeq.v to arbitrary relations (not only on
+   terms) and rename it in to Util/Relation/InfSeq.v
+
+- uniformize the various notions of bounded nat in NatUtil, and use a
+   record definition for defining projections at the same time
+
+- remove implicit arguments from tactic absolute_finite,
+   fin_monotone_succ, prove_cc, etc.: Fs can be inferred from Fs_ok
+
+- add improvement to DP pairs by ignoring pairs where rhs is a
+  subterm of lhs
+
+- add boolean function for rpo
+
+- replace showArctic[BZ]IntOk by boolean test
+
+- use Qed in beq_*_ok
+
+- replace rev by rev'
+
+- AF: extend by allowing collapsing argument filterings
+
+- prove that red R is finitely branching
+
+- remove from RelExtras the things already defined in RelUtil
+
+- use RelUtil notations in RelExtras
+
+- extend WF_sred_of_WF_red to red_mod
+
+- remove the use of beq_dec and beqtac
+
+- define eq_term_dec from beq_term
+
+- absurd_hyp is OBSOLETE: use contradict instead.
+
+- Eqdep uses an axiom: it is still used in ATerm and ACap (grep Eqdep)
+  and in the tactic Funeqtac. is it possible to get rid of it by using
+  Eqdep_dec only? yes
+
+- DP: improve by introducing marked symbols
+
+- move ListExt into ListUtil

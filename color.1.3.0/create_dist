@@ -1,0 +1,68 @@
+#!/bin/sh
+
+# CoLoR, a Coq library on rewriting and termination.
+# See the COPYRIGHTS and LICENSE files.
+#
+# - Frederic Blanqui, 2005-02-03
+
+prog=`basename $0`
+
+usage () { echo "usage: $prog [-h] [version_name]"; }
+
+help () {
+  cat <<EOF
+Creates a tar.gz file of CoLoR sources from the SVN archive.
+
+Options:
+-h Provide this help and exit
+EOF
+}
+
+case "$1" in
+-h) usage; echo; help; exit 0;;
+esac
+
+if test $# -gt 0; then version=$1; shift; else version=`date +%y%m%d`; fi
+
+if test $# -ne 0; then usage; exit 1; fi
+
+cwd=`pwd`
+
+cd /tmp
+
+rm -rf color
+svn co svn://scm.gforge.inria.fr/svn/color/trunk/color
+rm -rf `find color -name .svn`
+
+create_tar_gz () {
+    echo create $dir.tar.gz ...
+    tar cf $dir.tar $dir
+    gzip $dir.tar
+    mv $dir.tar.gz $cwd
+    rm -rf $dir
+}
+
+# Coccinelle for CoLoR
+
+dir=coccinelle_for_color.$version
+rm -rf $dir
+cp -r color/Coccinelle $dir
+create_tar_gz
+
+# CoLoR without Coccinelle
+
+dir=color.$version
+rm -rf $dir
+cp -r color $dir
+rm -rf $dir/Coccinelle $dir/Conversion/Coccinelle.v
+head -n -3 color/README > $dir/README
+create_tar_gz
+
+# CoLoR with Coccinelle
+
+dir=color_with_coccinelle.$version
+rm -rf $dir
+cp -r color $dir
+create_tar_gz
+
+rm -rf color

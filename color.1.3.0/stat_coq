@@ -1,0 +1,73 @@
+#!/bin/sh
+
+# CoLoR, a Coq library on rewriting and termination.
+# See the COPYRIGHTS and LICENSE files.
+#
+# - Frederic Blanqui, 2007-04-19
+
+prog=`basename $0`
+
+usage () { echo "usage: $prog [-h] [dir]"; }
+
+help () {
+  cat <<EOF
+Provides the number of Definitions, Lemmas, etc.
+
+Options:
+-h Provide this help and exit
+EOF
+}
+
+case "$1" in
+-h) usage; echo; help; exit 0;;
+esac
+
+if test $# -gt 1; then usage; exit 1; fi
+
+dir=${1:-.}
+
+files=`find $dir -path $dir/Coccinelle -prune -o -name \*.v -print`
+
+number () {
+  k=`grep "$key " $files | wc -l`
+  echo $key $k
+  n=`expr $n + $k`
+}
+
+total () { echo TOTAL $n; }
+
+reset () { n=0; }
+
+echo Lines `wc -l /dev/null $files | grep total | sed 's|total||'`
+echo
+
+key=Inductive; number
+echo
+
+reset
+key=Fixpoint; number
+key=Function; number
+total
+echo
+
+reset
+key=Definition; number
+key=Example; number
+key=Let; number
+total
+echo
+
+key=Ltac; number
+echo
+
+key=Notation; number
+echo
+
+reset
+key=Lemma; number
+key=Theorem; number
+key=Remark; number
+key=Fact; number
+key=Corollary; number
+key=Proposition; number
+total

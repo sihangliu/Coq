@@ -1,0 +1,46 @@
+Name: CoLoR
+Title: A Coq library on Rewriting and termination
+Author: Frédéric Blanqui
+Author: Sébastien Hinderer
+Author: Pierre-Yves Strub
+Author: Sidi Ould Biha
+Institution: INRIA
+Author: Solange Coupet-Grimal
+Author: William Delobel
+Institution: CNRS
+Institution: Université de la Méditerranée Aix-Marseille 2
+Institution: Université de Provence Aix-Marseille 1
+Author: Adam Koprowski
+Institution: Vrije Universiteit Amsterdam
+Institution: Technische Universiteit Eindhoven
+Author: Hans Zantema
+Institution: Technische Universiteit Eindhoven
+Author: Stephane Le Roux
+Institution: Ecole Normale Superieure de Lyon
+Author: Leo Ducas
+Institution: Ecole Normale Superieure de Paris
+Author: Johannes Waldmann
+Institution: Hochschule fur Technik, Wirtschaft und Kultur (FH) Leipzig
+Author: Qian Wang
+Author: Lianyi Zhang
+Institution: Tsinghua University, Beijing, China
+Author: Sorin Stratulat
+Institution: University Paul Verlaine, Metz, France
+Description: The aim of this Coq library is to provide the necessary
+formal basis for certifying termination proofs for rewriting systems
+Url: http://color.inria.fr
+License: CeCILL
+Keywords: termination, rewriting, lambda-calculus, polynom, typing,
+term, multiset, vector, list, rpo, lpo, mpo, horpo, dependency pair,
+filtering, conversion, manna-ness, interpretation, context, substitution,
+lexicographic, ordering, well-founded, algebra, monotony, matrix,
+string, unification, graph, decomposition, matching, semantic labeling,
+universal algebra, first-order terms, varyadic terms, simply-typed lambda-terms,
+ring, semi-ring, dependency graph, relation, classical logic,
+ordered ring, ordered semi-ring, noetherian, root labeling,
+flat context closure, loop, finitely branching, reducts, dependent choice,
+finite graph, alpha-equivalence, transitive closure, Tait, Girard,
+reductibility, computability predicate, inductive type, fixpoint, Tarski,
+de Bruijn indices, strongly connected component, topological ordering,
+infinite sequence, cycle, path, set, finite map, finite set, path ordering,
+pigeon-hole principle, Ramsey theorem

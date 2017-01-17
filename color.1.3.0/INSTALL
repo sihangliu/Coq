@@ -1,0 +1,50 @@
+Compilation and installation procedure using OPAM
+-------------------------------------------------
+
+Requirements:
+- OPAM version 1.2 or later (https://opam.ocaml.org/)
+
+Procedure:
+- step 1/2: opam repo add coq-released https://coq.inria.fr/opam/released
+  or opam update # if repository coq-released already added
+- step 2/2: opam install --jobs=N coq-color
+
+Compilation time: about 14' with 1 processor.
+
+Remark: to use a CoLoR file in your development, you need to prefix it
+with CoLoR and its complete path from the root directory of CoLoR. For
+instance, for LogicUtil, you need to write CoLoR.Util.Logic.LogicUtil.
+
+Enjoy!
+
+Self compilation and installation
+---------------------------------
+
+Requirements:
+- UNIX-like operating system (including Cygwin)
+- GNU find version 4.4.2 (http://www.gnu.org/software/findutils/findutils.html)
+- GNU make version 3.81 (http://www.gnu.org/software/make/)
+- Coq version 8.6 (http://coq.inria.fr/)
+
+Procedure for installing CoLoR in Coq default directory for user contributions:
+- step 1/2: make [-j N]
+- step 2/2: make install
+
+Procedure for installing CoLoR in $dir:
+- step 1/3: make [-j N]
+- step 2/3: DSTROOT=$dir make install
+- step 3/3: add in your _CoqProject file the following option:
+            -R $dir CoLoR
+  or add in your ~/.coqrc file the following line:
+            Add Rec LoadPath "$dir" as CoLoR.
+
+Procedure for compiling the html documentation:
+- step 1/1: make doc
+            (the starting file is doc/main.html)
+
+Procedure for compiling the TAGS file:
+- step 1/1: make tags
+This requires 'coqtags' from ProofGeneral (http://proofgeneral.inf.ed.ac.uk/).
+
+If you encounter any problem, send a mail to Frederic Blanqui
+(firstname.name@inria.fr).
