@@ -202,3 +202,241 @@ Section test_inster.
   Qed.
 End test_inster.
 
+Definition imp (P1 P2 : Prop) := P1 -> P2.
+Infix "-->" := imp (no associativity, at level 95).
+Ltac imp := unfold imp; firstorder.
+Theorem and_True_prem : forall P Q,
+    (P /\ True -> Q) -> (P -> Q).
+Proof.
+  imp.
+Qed.
+
+
+Theorem and_True_conc : forall P Q,
+    (P -> Q /\ True) -> (P -> Q).
+  imp.
+Qed.
+
+Theorem pick_perm1 : forall P Q R S,
+    (P /\ (Q /\ R) -> S) ->
+    ((P /\ Q) /\ R -> S).
+  imp.
+Qed.
+
+Theorem pick_perm2 : forall P Q R S,
+    (Q /\ (P /\ R) -> S) ->
+    ((P /\ Q) /\ R -> S).
+  imp.
+Qed.
+
+Theorem comm_perm : forall P Q R,
+    (P /\ Q -> R) ->
+    (Q /\ P -> R).
+  imp.
+Qed.
+
+Theorem pick_conc1 : forall P Q R S,
+    (S -> P /\ (Q /\ R)) ->
+    (S -> (P /\ Q) /\ R).
+  imp.
+Qed.
+
+Theorem pick_conc2 : forall P Q R S,
+    (S -> Q /\ (P /\ R)) ->
+    (S -> (P /\ Q) /\ R).
+  imp.
+Qed.
+
+Theorem comm_conc : forall P Q R,
+    (R -> P /\ Q) ->
+    (R -> Q /\ P).
+  imp.
+Qed.
+
+Ltac search_perm tac :=
+  let rec search P :=
+      tac
+      || (apply and_True_prem; tac)
+      || match P with
+        | ?P1 /\ ?P2 =>
+          (apply pick_perm1; search P1)
+          || (apply pick_perm2; search P2)
+        end
+  in match goal with
+     | [|- ?P /\ _ -> _] => search P
+     | [|- _ /\ ?P -> _] => apply comm_perm; search P
+     | [|- _ -> _] => progress (tac || (apply and_True_prem; tac))
+     end.
+
+
+
+Ltac search_conc tac :=
+  let rec search P :=
+      tac
+      || (apply and_True_conc; tac)
+      || match P with
+        | ?P1 /\ ?P2 =>
+          (apply pick_conc1; search P1)
+          || (apply pick_conc2; search P2)
+        end
+  in match goal with
+     | [|- _ -> ?P /\ _] => search P
+     | [|- _ -> _ /\ ?P] => apply comm_conc; search P
+     | [|- _ -> _] => progress (tac || (apply and_True_conc; tac))
+     end.
+
+Theorem False_perm : forall P Q,
+    False /\ P -> Q.
+  imp.
+Qed.
+
+Theorem True_conc : forall (P Q : Prop),
+    (P -> Q) ->
+    (P -> (True /\ Q)).
+  imp.
+Qed.
+
+Theorem Match : forall (P Q R : Prop),
+    (Q -> R) ->
+    (P /\ Q -> P /\ R).
+  imp.
+Qed.
+
+Theorem ex_perm : forall (T : Type) (P : T -> Prop) (Q R : Prop),
+    (forall x, P x /\ Q -> R) ->
+    (ex P /\ Q -> R).
+  imp.
+Qed.
+
+Theorem ex_conc : forall (T : Type) (P : T -> Prop) (Q R : Prop) (x : T),
+    (Q -> P x /\ R) ->
+    (Q -> ex P /\ R).
+  imp.
+Qed.
+
+Theorem imp_True : forall P,
+    P -> True.
+  imp.
+Qed.
+
+Ltac matcher :=
+  intros;
+  repeat search_perm ltac:(simple apply False_perm || (simple apply ex_perm; intro));
+  repeat search_conc ltac:(simple apply True_conc || simple eapply ex_conc
+                           || search_perm ltac:(simple apply Match));
+  try simple apply imp_True.
+
+Theorem t2: forall P Q : Prop,
+    Q /\ (P /\ False) /\ P -> P /\ Q. 
+  imp.
+Qed.
+
+(* matcher is not able to solve the lemma *)
+
+Print t2.
+Theorem t4 : forall (P : nat -> Prop) Q, (exists x, P x /\ Q) -> Q /\ (exists x, P x).
+  imp.
+Qed.
+
+Print t4.
+
+Theorem t5 : (forall x : nat, S x > x) -> 2 > 1.
+  intros. evar (y : nat).
+  let y' := eval unfold y in y in clear y; specialize (H y').
+  apply H.
+Qed.
+
+Ltac insterU H :=
+  repeat match type of H with
+         | forall x : ?T, _ =>
+           let x := fresh "x" in
+           evar (x : T);
+           let x' := eval unfold x in x in clear x; specialize (H x)
+         end.
+
+Theorem t5' : (forall x : nat, S x > x) -> 2 > 1. 
+  intros H; insterU H; apply H.
+Qed.
+
+
+Ltac insterKeep H :=
+  let H' := fresh "H'" in
+  generalize H; intro H'; insterU H'.
+
+Section t6.
+  Variables A B : Type.
+  Variable P : A -> B -> Prop.
+  Variable f : A -> A -> A.
+  Variable g : B -> B -> B.
+  Hypothesis H1 : forall v, exists u, P v u.
+  Hypothesis H2 : forall v1 u1 v2 u2,
+      P v1 u1 -> P v2 u2 -> P (f v1 v2) (g u1 u2).
+  Theorem t6 : forall v1 v2, exists u1, exists u2, P (f v1 v2) (g u1 u2).
+    intros. do 2 insterKeep H1. specialize (H' v1).
+    specialize (H'0 v2).
+    repeat match goal with
+           | [H : ex _ |- _] => destruct H
+           end.
+    eauto.
+  Qed.
+End t6.  
+
+Reset insterU.
+
+Ltac insterU tac H :=
+  repeat match type of H with
+         | forall x : ?T, _ =>
+           match type of T with
+           | Prop =>
+             (let H' := fresh "H'" in
+              assert (H' : T) by solve [tac];
+              specialize (H H'); clear H')
+             || fail 1
+           | _ =>
+             let x := fresh "x" in
+             evar (x : T);
+             let x' := eval unfold x in x in
+                 clear x; specialize (H x')
+           end
+         end.
+
+Ltac insterKeep tac H :=
+  let H' := fresh "H'" in
+  generalize H; intro H'; insterU tac H'.
+
+Section t7.
+  Variables A B : Type.
+  Variable Q : A -> Prop.
+  Variable P : A -> B -> Prop.
+  Variable f : A -> A -> A.
+  Variable g : B -> B -> B.
+  Hypothesis H1 : forall v, Q v -> exists u, P v u.
+  Hypothesis H2 : forall v1 u1 v2 u2,
+      P v1 u1 -> P v2 u2 -> P (f v1 v2) (g u1 u2).
+  Theorem t7 : forall v1 v2, Q v1 -> Q v2 -> exists u1, exists u2, P (f v1 v2) (g u1 u2).
+    intros; do 2 insterKeep ltac:(idtac; match goal with
+                                         | [H : Q ?v |- _] =>
+                                           match goal with
+                                           | [_ : context [P v _] |- _] => fail 1
+                                           | _ => apply H
+                                           end
+                                         end) H1;
+    repeat match goal with
+           | [H : ex _ |- _]=> destruct H
+           end; eauto.
+    Qed.
+End t7.                                             
+
+Theorem t8 : exists p : nat * nat, fst p = 3.
+  econstructor; instantiate (1 := (3, 2)); reflexivity.
+Qed.
+
+
+Ltac equate x y :=
+  let dummy := constr:(eq_refl x : x = y) in idtac.
+
+Theorem t9 : exists p : nat * nat, fst p = 3.
+  econstructor; match goal with
+                | [|- fst ?x = 3] => equate x (3, 2)
+                end; reflexivity.
+Qed.
