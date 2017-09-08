@@ -59,3 +59,11 @@ Proof.
   exists l1, x, l2. auto.
 Qed.
 
+Definition induction_list_append_rev (A : Type) (P : list A -> Type)
+    (H1 : P []) (Hn : forall (x : A) (l : list A), P l -> P (l ++ [x])) : forall l : list A, P l.
+  refine (fix F l :=
+            match l with
+            | [] => H1
+            | h :: t => _
+            end).
+ 
